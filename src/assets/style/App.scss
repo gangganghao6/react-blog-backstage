@@ -1,0 +1,39 @@
+@font-face {
+  font-family: Alifont;
+  src: url("../font/AlibabaSans-Regular.otf");
+}
+
+.App {
+  width: 100vw;
+  height: 100%;
+
+  .sider {
+    overflow: auto;
+    height: 100vh;
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+
+    .logo {
+      height: 32px;
+      margin: 16px;
+      background: rgba(255, 255, 255, 0.2);
+      font-size: 20px;
+      font-weight: 500;
+      color: white;
+      letter-spacing: 2px;
+    }
+  }
+
+  .site-layout {
+    margin-left: 200px;
+    .site-layout-background {
+      background: #fff;
+    }
+    .content-container {
+      width: 100%;
+      overflow: initial;
+    }
+  }
+}

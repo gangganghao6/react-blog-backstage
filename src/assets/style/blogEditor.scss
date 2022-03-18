@@ -1,0 +1,68 @@
+.edit-container {
+  width: 100%;
+  background-color: white;
+  display: flex;
+  flex-direction: row;
+  text-align: left;
+
+  .editor-container {
+    width: 45vw;
+    padding-right: 20px;
+
+    textarea {
+      width: 45vw;
+      resize: none;
+      height: 78vh;
+    }
+  }
+
+  .markdown-container {
+    width: 45vw;
+    height: 78vh;
+    overflow: scroll;
+
+    a {
+      text-decoration: underline;
+    }
+
+    blockquote {
+      border-left: 3px solid gray;
+      padding-left: 5px;
+    }
+
+    table {
+      margin-top: 10px;
+      margin-bottom: 10px;
+
+      thead {
+        tr {
+          th {
+            padding: 5px;
+            background-color: rgb(224, 224, 224);
+            font-weight: 1000;
+            font-size: 18px;
+          }
+        }
+      }
+
+      tbody {
+        tr {
+          td {
+            padding: 5px;
+            vertical-align: middle;
+          }
+        }
+      }
+    }
+
+    pre {
+      margin-top: 10px;
+      margin-bottom: 10px;
+    }
+
+    p {
+      font-size: 16px;
+      letter-spacing: 2px;
+    }
+  }
+}

@@ -1,5 +1,7 @@
-export let service = axios.create({
-  baseURL: "http://192.168.5.7:3000/api",
+import axios from "axios";
+
+export const service = axios.create({
+  baseURL: "/api",
   timeout: 5000,
 });
 

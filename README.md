@@ -1,1 +1,1 @@
-一个配备齐全的react模板空项目，直接yarn然后yarn run dev
+一个配备齐全的 react 模板空项目，直接 yarn 然后 yarn run dev

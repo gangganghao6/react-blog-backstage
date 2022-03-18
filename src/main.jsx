@@ -1,14 +1,14 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import "./index.scss";
+import "./assets/style/base.scss";
 import App from "./App";
-import { BrowserRouter } from "react-router-dom";
-import 'antd/dist/antd.css'; // or 'antd/dist/antd.less'
+import { HashRouter } from "react-router-dom";
+import "antd/dist/antd.css";
 ReactDOM.render(
   <React.StrictMode>
-    <BrowserRouter>
+    <HashRouter>
       <App />
-    </BrowserRouter>
+    </HashRouter>
   </React.StrictMode>,
   document.getElementById("root")
 );
