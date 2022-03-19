@@ -1,6 +1,6 @@
 function getSelectedKeys(pathName) {
   let index;
-  let testResult = /\/(index|bloglist|album|timeline|about|footer|setting)/.exec(pathName);
+  let testResult = /\/(index|bloglist|album|timeline|about|footer|setting|tags)/.exec(pathName);
   testResult = (testResult === null ? '/index' : testResult[0])
   switch (testResult) {
     case "/index":
@@ -15,14 +15,17 @@ function getSelectedKeys(pathName) {
     case "/timeline":
       index = 4;
       break;
-    case "/about":
+    case "/footer":
       index = 5;
       break;
-    case "/footer":
+    case "/tags":
       index = 6;
       break;
-    case "/setting":
+    case "/about":
       index = 7;
+      break;
+    case "/setting":
+      index = 8;
       break;
   }
   return index;
@@ -55,14 +58,20 @@ const siderItem = [
     key: "5",
   },
   {
-    text: "关于我",
-    path: "/about",
+    text: "标签管理",
+    path: "/tags",
     key: "6",
   },
   {
+    text: "关于我",
+    path: "/about",
+    key: "7",
+  },
+
+  {
     text: "设置",
     path: "/setting",
-    key: "7",
+    key: "8",
   },
 ];
 export {getSelectedKeys, siderItem};

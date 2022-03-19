@@ -65,12 +65,9 @@ const columns = [
               <Popconfirm
                   title="删除后不可恢复,确定删除吗?"
                   onConfirm={async () => {
-                    let totalCount = 0;
+                    let totalCount = item.comments.length;
                     item.comments.forEach((itemx) => {
-                      totalCount++;
-                      itemx.children.forEach((itemy) => {
-                        totalCount++;
-                      })
+                      totalCount+=itemx.children.length;
                     })
                     let info = await axios.get('/api/info')
                     await axios.patch('/api/info', {
@@ -96,10 +93,8 @@ const columns = [
 ];
 
 
-function onChangeTable(setPage, setLoading) {
-  return function (pagination, filters, sorter, extra) {
-    setPage(pagination.current)
-  }
+function onChangeTable(pagination, filters, sorter, extra) {
+
 }
 
 function onChangeTime(setTime, setType) {
@@ -130,12 +125,10 @@ function publish() {
   }
 }
 
-function getDataList(page = 1, id, title, time, type, setLoading) {
+function getDataList(id, title, time, type, setLoading) {
   return function () {
     setLoading(true)
     let config = {
-      _page: page,
-      _limit: 10
     }
     if (type === 'id' && id !== '') {
       config.id = id;
@@ -151,7 +144,7 @@ function getDataList(page = 1, id, title, time, type, setLoading) {
 
 export default memo(function BlogList() {
   ({refresh, setRefresh} = store)
-  const [page, setPage] = useState(1)
+  // const [page, setPage] = useState(1)
   const [id, setId] = useState(undefined)
   const [title, setTitle] = useState(undefined)
   const [time, setTime] = useImmer({})
@@ -166,8 +159,8 @@ export default memo(function BlogList() {
         <Option value="time">时间</Option>
       </Select>
   );
-  let {data} = useRequest(getDataList(page, id, title, time, type, setLoading), {
-    refreshDeps: [refresh, id, title, time, type, page]
+  let {data} = useRequest(getDataList( id, title, time, type, setLoading), {
+    refreshDeps: [refresh, id, title, time, type]
   })
   if (data) {
     total = data.headers['x-total-count'];
@@ -191,7 +184,7 @@ export default memo(function BlogList() {
         <Search addonBefore={selectBefore} defaultValue="" style={{width: "25%", marginRight: '50px'}}
                 onSearch={onSearch(setId, setTitle, type)}/>
         <DatePicker onChange={onChangeTime(setTime, setType)} picker="month"/>
-        <Table columns={columns} dataSource={data} onChange={onChangeTable(setPage)} pagination={{total}}
+        <Table columns={columns} dataSource={data} onChange={onChangeTable} pagination={{total}}
                loading={loading}/>
       </>
   );

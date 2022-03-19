@@ -1,6 +1,6 @@
 import {memo, useState} from "react";
 
-import {Button, Image, Input, Space, Upload, message, Radio} from "antd";
+import {Button, Image, Input, Space, Upload, message, Radio, Checkbox} from "antd";
 import {useNavigate, useParams} from "react-router-dom";
 import "../assets/style/blogContent.scss";
 import Compressor from 'compressorjs';
@@ -9,8 +9,8 @@ import {UploadOutlined} from "@ant-design/icons";
 import axios from "axios";
 
 let formData = new FormData();
-let imgPathNames, mdPathName, uploaded,navigator;
-uploaded = false;
+let imgPathNames, mdPathName, navigator;
+let uploaded = false;
 
 function onChange(setContent) {
   return async function (info) {
@@ -60,7 +60,7 @@ function upLoad(content, setContent) {
   }
 }
 
-function publish(title, content, type, tag) {
+function publish(title, content, type, tag, recommend) {
   return async function () {
     if (title === '' || tag === '' || uploaded === false) {
       message.error("还有东西没填哦")
@@ -74,19 +74,19 @@ function publish(title, content, type, tag) {
         'Content-Type': 'application/md'
       }
     })
-    await axios.post("/api/blogs", {
-      type,
-      title,
-      content: mdPathName.data[0],
-      time: +new Date(),
-      recommend: false,
-      images: imgPathNames.data,
-      comments: [],
-      tags: tag,
-      post: imgPathNames.data[0],
-      lastModified: +new Date(),
-      views: 0
-    })
+      await axios.post("/api/blogs", {
+        type,
+        title,
+        content: mdPathName.data[0],
+        time: +new Date(),
+        recommend,
+        images: imgPathNames ? imgPathNames.data : [],
+        comments: [],
+        tags: tag,
+        post: imgPathNames.data[0],
+        lastModified: +new Date(),
+        views: 0,
+      })
     await axios.patch("/api/updateInfoBlogs", {
       type: "add"
     })
@@ -109,7 +109,8 @@ export default memo(function () {
   const [title, setTitle] = useState('')
   const [type, setType] = useState(1)
   const [tag, setTag] = useState('')
-  navigator=useNavigate()
+  const [recommend, setRecommend] = useState(false)
+  navigator = useNavigate()
   // let str = 'adfa ![isf](adfdsaff.jpg)ererer'
   // str = str.replace(reg, '![img](http://192.168.31.30:3000/test.jpg)')
   // console.log(str)
@@ -118,7 +119,7 @@ export default memo(function () {
         <div className={"blog-content"}>
           <Space style={{paddingBottom: '10px', textAlign: 'left'}}>
             <Upload beforeUpload={beforeUpload} onChange={onChange(setContent)} directory>
-              <Button icon={<UploadOutlined/>}>上传MarkDown文件</Button>
+              <Button icon={<UploadOutlined/>}>上传MarkDown文件夹</Button>
             </Upload>
             <Button type={'primary'} onClick={upLoad(content, setContent)}>上传图片</Button>
             标题：<Input onChange={(e) => {
@@ -127,18 +128,24 @@ export default memo(function () {
             分类：<Input onChange={(e) => {
             setTag(e.target.value)
           }}/>
+            样式：
             <Radio.Group onChange={(e) => {
               setType(e.target.value)
             }} defaultValue={2}>
               <Radio value={1}>1</Radio>
               <Radio value={2}>2</Radio>
             </Radio.Group>
+            <Checkbox onChange={() => {
+              setRecommend(!recommend)
+            }} checked={recommend}>推荐</Checkbox>
           </Space>
           <BlogEditor content={content} setContent={setContent}/>
           <div className={'action-container'}>
             <Space>
               <Button type={'primary'} onClick={publish(title, content, type, tag)}>发布</Button>
-              <Button type={'primary'}>取消</Button>
+              <Button type={'primary'} onClick={() => {
+                navigator('/bloglist')
+              }}>取消</Button>
             </Space>
           </div>
         </div>
