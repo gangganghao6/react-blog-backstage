@@ -20,7 +20,7 @@ const columns = [
     title: '预览',
     dataIndex: 'src',
     render: (e) => {
-      return (<Image width={200} src={`http://127.0.0.1:3000${e}`}/>)
+    return (<Image width={200} src={`${window.url}${e}`}/>)
     },
   },
   {
@@ -47,7 +47,7 @@ function onChange(info) {
       // });
       fileCount++;
       if (fileCount === info.fileList.length) {
-        message.success('处理完成')
+        alert('处理完成')
         firstInput = true;
       }
     },
@@ -59,12 +59,9 @@ function onChange(info) {
 
 function upLoad(setMyData, setMyGzipData) {
   return async function () {
-    imgPathNames = await axios.patch('/api/updateAlbums', formData, {
+    imgPathNames = await axios.post('/api/albumImages', formData, {
       headers: {
         'Content-Type': 'image/*'
-      },
-      params: {
-        path: `${dayjs(+new Date()).format('YYYY-MM-DD')}`,
       }
     })
     // let regex = /gzip_/g
@@ -103,7 +100,7 @@ function save(name, myData, myGzipData) {
       comments: []
     })
     await axios.patch('/api/updateInfoLastModified')
-    alert("保存成功")
+    message.success("保存成功")
     navigator('/album')
   }
 }

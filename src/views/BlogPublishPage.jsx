@@ -25,14 +25,11 @@ function onChange(setContent) {
     } else {
       formData.append(info.file.name, info.file);
       new Compressor(info.file, {
-        quality: 0.6,
+        quality: 0.1,
         convertTypes: ['image/png', 'image/webp'],
         convertSize: 1000000,
         success(result) {
           formData.append(`gzip_${info.file.name}`, result, `gzip_${info.file.name}`);
-          // axios.post('/path/to/upload', formData).then(() => {
-          //   console.log('Upload success');
-          // });
         },
         error(err) {
           console.log(err.message);
@@ -53,7 +50,7 @@ function upLoad(content, setContent) {
     let matcher;
     let tempContent = content;
     for (let index = 0; (matcher = reg.exec(content)) !== null; index++) {
-      tempContent = tempContent.replace(matcher[0], `![img](http://192.168.31.30:3000${imgPathNames.data[index]})`)
+      tempContent = tempContent.replace(matcher[0], `![img](${window.url}${imgPathNames.data[index]})`)
     }
     setContent(tempContent)
     message.success("上传成功")

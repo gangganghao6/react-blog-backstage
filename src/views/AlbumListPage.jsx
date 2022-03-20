@@ -17,7 +17,7 @@ const columns = [
     title: "封面",
     dataIndex: "post",
     render(e,item){
-      return (<Image width={200} src={`http://127.0.0.1:3000${item.gzipImages[0]}`}/>)
+      return (<Image width={200} src={`${window.url}${item.gzipImages[0]}`}/>)
     }
   },
   {

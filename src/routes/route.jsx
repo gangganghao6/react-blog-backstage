@@ -7,6 +7,7 @@ import EditAlbumPage from "../views/EditAlbumPage";
 import AlbumPublishPage from "../views/AlbumPublishPage";
 import TimeLinePage from "../views/TimeLinePage";
 import TagsPage from "../views/TagsPage";
+import FooterPage from "../views/FooterPage";
 
 const AllRoutes = () => {
   return useRoutes([
@@ -49,6 +50,10 @@ const AllRoutes = () => {
     {
       path: "/tags",
       element: <TagsPage/>,
+    },
+    {
+      path: "/footer",
+      element: <FooterPage/>,
     },
     {
       path: "*",

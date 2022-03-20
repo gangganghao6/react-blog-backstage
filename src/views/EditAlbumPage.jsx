@@ -30,7 +30,7 @@ const columns = [
     title: '预览',
     dataIndex: 'src',
     render: (e) => {
-      return (<Image height={100} src={`http://127.0.0.1:3000${e}`}/>)
+      return (<Image height={100} src={`${window.url}${e}`}/>)
     },
   },
   {
@@ -43,6 +43,7 @@ const columns = [
 ]
 
 function onChange(info) {
+
   uploaded = true;
   if (firstInput) {
     message.loading('正在处理...')
@@ -50,14 +51,14 @@ function onChange(info) {
   }
   formData.append(info.file.name, info.file, info.file.name);
   new Compressor(info.file, {
-    quality: 0.6,
+    quality: 0.1,
     convertTypes: ['image/png', 'image/webp'],
     convertSize: 1000000,
     success(result) {
       formData.append(`gzip_${info.file.name}`, result, `gzip_${info.file.name}`);
       fileCount++;
       if (fileCount === info.fileList.length) {
-        message.success('处理完成')
+        alert('处理完成')
         firstInput = true;
       }
     },
@@ -114,7 +115,7 @@ function save(id, name, comments, firstTime, deletedCount, myData, myGzipData) {
       commentCount: info.data.commentCount - deletedCount,
     })
     await axios.patch('/api/updateInfoLastModified')
-    alert("保存成功")
+    message.success("保存成功")
     navigator('/album')
   }
 }

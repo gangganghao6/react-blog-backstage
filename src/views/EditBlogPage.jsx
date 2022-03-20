@@ -13,10 +13,15 @@ import Compressor from "compressorjs";
 import {UploadOutlined} from "@ant-design/icons";
 
 let formData = new FormData();
-let imgPathNames, mdPathName, navigator;
-
+let imgPathNames, navigator;
+let fileCount = 1;
+let firstInput = true;
 function onChange(setContent) {
   return async function (info) {
+    if (firstInput) {
+      message.loading('正在处理...')
+      firstInput = false;
+    }
     let reg = /\.md$/
     if (reg.exec(info.file.name) !== null) {
       let reader = new FileReader();
@@ -25,16 +30,18 @@ function onChange(setContent) {
         setContent(reader.result)
       }
     } else {
-      formData.append(info.file.name, info.file);
+      formData.append(info.file.name, info.file,info.file.name);
       new Compressor(info.file, {
-        quality: 0.6,
+        quality: 0.1,
         convertTypes: ['image/png', 'image/webp'],
         convertSize: 1000000,
         success(result) {
           formData.append(`gzip_${info.file.name}`, result, `gzip_${info.file.name}`);
-          // axios.post('/path/to/upload', formData).then(() => {
-          //   console.log('Upload success');
-          // });
+          fileCount++;
+          if (fileCount === info.fileList.length) {
+            alert('处理完成')
+            firstInput = true;
+          }
         },
         error(err) {
           console.log(err.message);
@@ -45,6 +52,7 @@ function onChange(setContent) {
 }
 
 function upLoad(content, setContent, firstTime) {
+
   return async function () {
     imgPathNames = await axios.patch('/api/updateBlogImages', formData, {
       headers: {
@@ -58,17 +66,17 @@ function upLoad(content, setContent, firstTime) {
     let matcher;
     let tempContent = content;
     for (let index = 0; (matcher = reg.exec(content)) !== null; index++) {
-      tempContent = tempContent.replace(matcher[0], `![img](http://192.168.31.30:3000${imgPathNames.data[index]})`)
+      tempContent = tempContent.replace(matcher[0], `![img](${window.url}${imgPathNames.data[index]})`)
     }
     setContent(tempContent)
-    message.success("上传成功")
+    alert("上传成功")
   }
 }
 
 function getBlogContent(path = '') {
   return function () {
     if (path !== '') {
-      return axios.get(`http://127.0.0.1:3000${path}`)
+      return axios.get(`${window.url}${path}`)
     } else {
       return Promise.resolve()
     }
@@ -186,7 +194,7 @@ export default memo(function EditBlogPage({my}) {
             <Checkbox onChange={()=>{setRecommend(!recommend)}} checked={recommend}>推荐</Checkbox>
           </Space>
           <BlogEditor content={content} setContent={setContent}/>
-          <Comments comments={tempComment} refresh={refresh} setRefresh={setRefresh} setDeletedCount={setDeletedCount}
+          <Comments comments={tempComment} setRefresh={setRefresh} setDeletedCount={setDeletedCount}
                     deletedCount={deletedCount}/>
           <div className={'action-container'}>
             <Space>

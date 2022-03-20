@@ -2,18 +2,12 @@ import AllRoutes from "./routes/route";
 import "./assets/style/App.scss";
 import { Layout, Menu } from "antd";
 import {
-  AppstoreOutlined,
-  BarChartOutlined,
-  CloudOutlined,
-  ShopOutlined,
-  TeamOutlined,
   UserOutlined,
-  UploadOutlined,
-  VideoCameraOutlined,
 } from "@ant-design/icons";
 import { NavLink, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { getSelectedKeys, siderItem } from "./utils/getSelectedKeys";
+
 
 const { Header, Content, Footer, Sider } = Layout;
 

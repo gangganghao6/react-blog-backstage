@@ -1,20 +1,25 @@
 import {memo, useState} from "react";
-import {Button, message, Popconfirm, Timeline} from "antd";
+import {Button, DatePicker, message, Popconfirm, Timeline} from "antd";
 import {ClockCircleOutlined, DeleteOutlined} from "@ant-design/icons";
 import dayjs from "dayjs";
 import {useRequest} from "ahooks";
 import axios from "axios";
 import Search from "antd/es/input/Search";
-import store from "../reducer/resso";
 
 function getTimeLine() {
-  return axios.get('/api/timeline')
+  return axios.get('/api/timeline', {
+    params: {
+      _sort: 'time',
+      _order: 'desc'
+    }
+  })
 }
 
-function onSearch(refresh,setRefresh) {
+function onSearch(refresh, setRefresh, time) {
   return async function (content) {
+    time = isNaN(time) ? +new Date() : time
     await axios.post('/api/timeLine', {
-      time: +new Date(),
+      time: time,
       record: content
     })
     await axios.patch('/api/updateInfoLastModified')
@@ -24,8 +29,8 @@ function onSearch(refresh,setRefresh) {
 }
 
 export default memo(function TimeLinePage() {
-  // const {refresh, setRefresh} = store;
-  const[refresh,setRefresh]=useState(false)
+  const [refresh, setRefresh] = useState(false)
+  const [time, setTime] = useState(+new Date())
   let {data = {data: []}} = useRequest(getTimeLine, {
     refreshDeps: [refresh]
   });
@@ -57,12 +62,17 @@ export default memo(function TimeLinePage() {
         );
       })}
     </Timeline>
+
+    自定义日期：
+    <DatePicker size="large" onChange={(e, time) => {
+      setTime(dayjs(time).valueOf())
+    }} renderExtraFooter={() => 'extra footer'}/>
     <Search
         placeholder="输入新增的事件"
-        // enterButton="新增事件"
+        enterButton="添加"
         size="large"
-        onSearch={onSearch(refresh,setRefresh)}
-        style={{width: "50%"}}
+        onSearch={onSearch(refresh, setRefresh, time)}
+        style={{width: "30%", marginLeft: '30px'}}
     />
   </>
 });

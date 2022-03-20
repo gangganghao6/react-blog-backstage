@@ -1,20 +1,17 @@
 import React, {createElement, useState, memo} from "react";
-import NProgress from "nprogress";
-import {Tooltip} from "antd";
-import {Comment, Avatar, Form, Button, List, Input} from "antd";
-import {DislikeOutlined, LikeOutlined, DislikeFilled, LikeFilled, UserOutlined} from "@ant-design/icons";
-import dayjs from "dayjs";
 import CommentItem from "./CommentItem";
-import {useImmer} from "use-immer";
 import "../assets/style/blogComment.scss";
 
-export default memo(function BlogComments({comments, setRefresh, refresh, setDeletedCount, deletedCount}) {
+export default memo(function BlogComments({comments, setRefresh, setDeletedCount, deletedCount}) {
   function deleteComment(onlyId, isInner) {
     return function () {
       if (!isInner) {
+        let total = 0;
         comments.forEach((item, index) => {
           if (item.onlyId === onlyId) {
+            total += item.children.length;
             comments.splice(index, 1)
+            setDeletedCount(deletedCount + total)
           }
         })
       } else {
@@ -25,8 +22,8 @@ export default memo(function BlogComments({comments, setRefresh, refresh, setDel
             }
           })
         })
+        setDeletedCount(deletedCount + 1)
       }
-      setDeletedCount(deletedCount + 1)
       setRefresh()
     }
   }

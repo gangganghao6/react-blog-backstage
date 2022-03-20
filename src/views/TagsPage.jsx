@@ -12,9 +12,6 @@ function getTimeLine() {
 
 function onAdd(refresh, setRefresh) {
   return async function (content) {
-    let tags = await axios.get('/api/tags')
-    console.log(content)
-    let index = tags.data.indexOf(content)
     await axios.patch('/api/updateTags', {
       tag:content
     })
@@ -39,15 +36,13 @@ export default memo(function TagsPage() {
     refreshDeps: [refresh]
   });
   return <>
-    <Timeline mode="alternate" className={"timeline"}>
+    <Timeline mode="left" style={{textAlign:'left',marginLeft:"50%"}}>
       {data.data.map((item) => {
         return (
             <Timeline.Item
-                // key={item.id}
-                // label={dayjs(item.time).format("YYYY-MM-DD HH:mm:ss")}
                 dot={<>
                   <Popconfirm
-                      title="确认是否删除这个事件?"
+                      title="确认是否删除这个标签?"
                       onConfirm={onDelete(refresh, setRefresh, item)
                       }
                       okText="是"
@@ -65,7 +60,7 @@ export default memo(function TagsPage() {
     </Timeline>
     <Search
         placeholder="输入新增的标签"
-        // enterButton="新增事件"
+        enterButton="添加"
         size="large"
         onSearch={onAdd(refresh, setRefresh)}
         style={{width: "50%"}}
