@@ -65,9 +65,17 @@ function upLoad(content, setContent, firstTime) {
     let reg = /!\[(.*?)\]\((.*?)\)/mg;
     let matcher;
     let tempContent = content;
-    for (let index = 0; (matcher = reg.exec(content)) !== null; index++) {
-      tempContent = tempContent.replace(matcher[0], `![img](${window.url}${imgPathNames.data[index]})`)
+    let imgLength=imgPathNames.data.length;
+    for(let index=0;index<imgLength;index++){
+      let splits=imgPathNames.data[index].split('/')
+      let fileName=splits[3]
+      for (let indexy = 0; (matcher = reg.exec(content)) !== null; indexy++) {
+        if(fileName.includes(matcher[1])){
+          tempContent = tempContent.replace(matcher[0], `![img](${window.url}${imgPathNames.data[index]})`)
+        }
+      }
     }
+
     setContent(tempContent)
     alert("上传成功")
   }
@@ -102,6 +110,7 @@ function save(id, title, content, tag, type, comments, firstTime, deletedCount,r
     let config = {}
     if (imgPathNames) {
       config.images = imgPathNames.data
+      config.post=imgPathNames.data[0]
     }
     await axios.patch(`/api/blogs/${id}`, {
       title,
@@ -130,7 +139,15 @@ function save(id, title, content, tag, type, comments, firstTime, deletedCount,r
 function cancel() {
   navigator('/bloglist')
 }
+let md=`![image-20220320204359414](C:\\Users\\53039\\Desktop\\blogtest\\image-20220320204359414.png)
 
+![image-20220320204409652](C:\\Users\\53039\\Desktop\\blogtest\\image-20220320204409652.png)
+
+![image-20220320204421834](C:\\Users\\53039\\Desktop\\blogtest\\image-20220320204421834.png)
+
+![image-20220320204437994](C:\\Users\\53039\\Desktop\\blogtest\\image-20220320204437994.png)
+
+![](C:\\Users\\53039\\Desktop\\blogtest\\20211121_205816.jpg)`
 export default memo(function EditBlogPage({my}) {
   navigator = useNavigate()
   let {id} = useParams();
@@ -150,6 +167,7 @@ export default memo(function EditBlogPage({my}) {
   if (data) {
     tempTitle = data.data.title
     tempType = data.data.type
+
     tempTag = data.data.tags
     mdFile = data.data.content;
     tempComment = data.data.comments;
@@ -187,7 +205,7 @@ export default memo(function EditBlogPage({my}) {
             样式：
             <Radio.Group onChange={(e) => {
               setType(e.target.value)
-            }} defaultValue={type}>
+            }} value={type}>
               <Radio value={1}>1</Radio>
               <Radio value={2}>2</Radio>
             </Radio.Group>

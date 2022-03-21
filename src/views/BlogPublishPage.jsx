@@ -49,8 +49,15 @@ function upLoad(content, setContent) {
     let reg = /!\[(.*?)\]\((.*?)\)/mg;
     let matcher;
     let tempContent = content;
-    for (let index = 0; (matcher = reg.exec(content)) !== null; index++) {
-      tempContent = tempContent.replace(matcher[0], `![img](${window.url}${imgPathNames.data[index]})`)
+    let imgLength=imgPathNames.data.length;
+    for(let index=0;index<imgLength;index++){
+      let splits=imgPathNames.data[index].split('/')
+      let fileName=splits[3]
+      for (let indexy = 0; (matcher = reg.exec(content)) !== null; indexy++) {
+        if(fileName.includes(matcher[1])){
+          tempContent = tempContent.replace(matcher[0], `![img](${window.url}${imgPathNames.data[index]})`)
+        }
+      }
     }
     setContent(tempContent)
     message.success("上传成功")
@@ -71,6 +78,7 @@ function publish(title, content, type, tag, recommend) {
         'Content-Type': 'application/md'
       }
     })
+    console.log(type)
       await axios.post("/api/blogs", {
         type,
         title,
@@ -128,7 +136,7 @@ export default memo(function () {
             样式：
             <Radio.Group onChange={(e) => {
               setType(e.target.value)
-            }} defaultValue={2}>
+            }} value={type}>
               <Radio value={1}>1</Radio>
               <Radio value={2}>2</Radio>
             </Radio.Group>
@@ -139,7 +147,7 @@ export default memo(function () {
           <BlogEditor content={content} setContent={setContent}/>
           <div className={'action-container'}>
             <Space>
-              <Button type={'primary'} onClick={publish(title, content, type, tag)}>发布</Button>
+              <Button type={'primary'} onClick={publish(title, content, type, tag,recommend)}>发布</Button>
               <Button type={'primary'} onClick={() => {
                 navigator('/bloglist')
               }}>取消</Button>
