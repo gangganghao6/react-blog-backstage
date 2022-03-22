@@ -5,9 +5,10 @@ import dayjs from "dayjs";
 import {useRequest} from "ahooks";
 import axios from "axios";
 import Search from "antd/es/input/Search";
+import {service} from "../requests/request";
 
 function getTimeLine() {
-  return axios.get('/api/timeline', {
+  return service.get('/api/timeline', {
     params: {
       _sort: 'time',
       _order: 'desc'
@@ -22,7 +23,7 @@ function onSearch(refresh, setRefresh, time) {
       time: time,
       record: content
     })
-    await axios.patch('/api/updateInfoLastModified')
+    await service.patch('/api/updateInfoLastModified')
     message.success('已发布')
     setRefresh(!refresh)
   }
@@ -45,7 +46,7 @@ export default memo(function TimeLinePage() {
                   <Popconfirm
                       title="确认是否删除这个事件?"
                       onConfirm={() => {
-                        axios.delete(`/api/timeLine/${item.id}`)
+                        service.delete(`/api/timeLine/${item.id}`)
                         message.success('已删除')
                         setRefresh(!refresh)
                       }}

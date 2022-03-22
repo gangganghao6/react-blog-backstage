@@ -5,17 +5,18 @@ import axios from "axios";
 import {DeleteOutlined} from "@ant-design/icons";
 import Search from "antd/es/input/Search";
 import {useRequest} from "ahooks";
+import {service} from "../requests/request";
 
 function getTimeLine() {
-  return axios.get('/api/tags')
+  return service.get('/api/tags')
 }
 
 function onAdd(refresh, setRefresh) {
   return async function (content) {
-    await axios.patch('/api/updateTags', {
+    await service.patch('/api/updateTags', {
       tag:content
     })
-    await axios.patch('/api/updateInfoLastModified')
+    await service.patch('/api/updateInfoLastModified')
     message.success('已发布')
     setRefresh(!refresh)
   }
@@ -23,8 +24,8 @@ function onAdd(refresh, setRefresh) {
 
 function onDelete(refresh, setRefresh, content) {
   return async function () {
-    await axios.patch('/api/deleteTags', {tag: content})
-    await axios.patch('/api/updateInfoLastModified')
+    await service.patch('/api/deleteTags', {tag: content})
+    await service.patch('/api/updateInfoLastModified')
     message.success('已删除')
     setRefresh(!refresh)
   }

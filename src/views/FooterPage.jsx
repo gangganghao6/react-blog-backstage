@@ -7,9 +7,10 @@ import "rc-footer/assets/index.css";
 import ReactJson from 'react-json-view'
 import {useImmer} from "use-immer";
 import {Button, message} from "antd";
+import {service} from "../requests/request";
 
 function getFooter() {
-  return axios.get('/api/footer')
+  return service.get('/api/footer')
 }
 
 function onAdd(changed, setChanged, setObj) {
@@ -38,7 +39,7 @@ function onDelete(changed, setChanged, setObj) {
 
 function save(newValue, refresh, setRefresh) {
   return function () {
-    axios.patch('/api/updateFooter', {
+    service.patch('/api/updateFooter', {
       footers: newValue
     }).then()
     message.success('已保存')
@@ -63,7 +64,7 @@ export default memo(function FooterPage() {
     })
     setDisplay((draft) => {
       draft.data.forEach((item) => {
-        item.icon = <img src={`${window.url}${item.post}`} loading={"lazy"} alt={item.post}/>
+        item.icon = <img src={`${item.post}`} loading={"lazy"} alt={item.post}/>
         item.items.forEach((itemx) => {
           if (itemx.url === '') {
             delete itemx.url
@@ -79,7 +80,7 @@ export default memo(function FooterPage() {
     })
     setDisplay((draft) => {
       draft.data.forEach((item) => {
-        item.icon = <img src={`${window.url}${item.post}`} loading={"lazy"} alt={item.post}/>
+        item.icon = <img src={`${item.post}`} loading={"lazy"} alt={item.post}/>
         item.items.forEach((itemx) => {
           if (itemx.url === '') {
             delete itemx.url

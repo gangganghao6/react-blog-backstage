@@ -8,6 +8,7 @@ import {useRequest} from 'ahooks'
 import axios from "axios";
 import store from "../reducer/resso";
 import {useImmer} from "use-immer";
+import {service} from "../requests/request";
 
 let navigator;
 let refresh, setRefresh;
@@ -70,12 +71,12 @@ const columns = [
                       totalCount+=itemx.children.length;
                     })
                     let info = await axios.get('/api/info')
-                    await axios.patch('/api/info', {
+                    await service.patch('/api/info', {
                       commentCount: info.data.commentCount - totalCount,
                       blogCount: info.data.blogCount - 1
                     })
-                    await axios.delete(`/api/blogs/${item.id}`)
-                    await axios.patch('/api/updateInfoLastModified')
+                    await service.delete(`/api/blogs/${item.id}`)
+                    await service.patch('/api/updateInfoLastModified')
                     message.success("删除成功")
                     setRefresh()
                   }}
@@ -138,7 +139,7 @@ function getDataList(id, title, time, type, setLoading) {
       config["time_gte"] = time.pre;
       config["time_lte"] = time.aft;
     }
-    return axios.get('/api/blogs', {params: config})
+    return service.get('/api/blogs', {params: config})
   }
 }
 

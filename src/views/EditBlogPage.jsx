@@ -11,16 +11,20 @@ import dayjs from "dayjs";
 import store from "../reducer/resso";
 import Compressor from "compressorjs";
 import {UploadOutlined} from "@ant-design/icons";
+import {service} from "../requests/request";
 
 let formData = new FormData();
 let imgPathNames, navigator;
-let fileCount = 1;
+let fileCount = 0;
 let firstInput = true;
-function onChange(setContent) {
+let uploaded = false;
+
+function onChange(setContent,loading,setLoading) {
   return async function (info) {
-    if (firstInput) {
-      message.loading('正在处理...')
-      firstInput = false;
+    uploaded = true;
+    if(firstInput){
+      setLoading(true);
+      firstInput=false;
     }
     let reg = /\.md$/
     if (reg.exec(info.file.name) !== null) {
@@ -28,6 +32,12 @@ function onChange(setContent) {
       reader.readAsText(info.file, 'utf8')
       reader.onload = () => {
         setContent(reader.result)
+        fileCount++;
+        if(fileCount===info.fileList.length){
+          setLoading(false);
+          firstInput=true;
+          message.success('处理完成')
+        }
       }
     } else {
       formData.append(info.file.name, info.file,info.file.name);
@@ -38,9 +48,10 @@ function onChange(setContent) {
         success(result) {
           formData.append(`gzip_${info.file.name}`, result, `gzip_${info.file.name}`);
           fileCount++;
-          if (fileCount === info.fileList.length) {
-            alert('处理完成')
-            firstInput = true;
+          if(fileCount===info.fileList.length){
+            setLoading(false);
+            firstInput=true;
+            message.success('处理完成')
           }
         },
         error(err) {
@@ -54,7 +65,7 @@ function onChange(setContent) {
 function upLoad(content, setContent, firstTime) {
 
   return async function () {
-    imgPathNames = await axios.patch('/api/updateBlogImages', formData, {
+    imgPathNames = await service.patch('/api/updateBlogImages', formData, {
       headers: {
         'Content-Type': 'image/*'
       },
@@ -68,23 +79,23 @@ function upLoad(content, setContent, firstTime) {
     let imgLength=imgPathNames.data.length;
     for(let index=0;index<imgLength;index++){
       let splits=imgPathNames.data[index].split('/')
-      let fileName=splits[3]
+      let fileName=splits[5]
       for (let indexy = 0; (matcher = reg.exec(content)) !== null; indexy++) {
         if(fileName.includes(matcher[1])){
-          tempContent = tempContent.replace(matcher[0], `![img](${window.url}${imgPathNames.data[index]})`)
+          tempContent = tempContent.replace(matcher[0], `![img](${imgPathNames.data[index]})`)
         }
       }
     }
 
     setContent(tempContent)
-    alert("上传成功")
+    message.success("上传成功")
   }
 }
 
 function getBlogContent(path = '') {
   return function () {
     if (path !== '') {
-      return axios.get(`${window.url}${path}`)
+      return service.get(`${path}`)
     } else {
       return Promise.resolve()
     }
@@ -93,7 +104,7 @@ function getBlogContent(path = '') {
 
 function getBlogDetail(id) {
   return function () {
-    return axios.get('/api/blogs/' + id)
+    return service.get('/api/blogs/' + id)
   }
 }
 
@@ -102,7 +113,7 @@ function save(id, title, content, tag, type, comments, firstTime, deletedCount,r
     let formData = new FormData()
     let file = new File([content], `blogs/${dayjs(firstTime).format('YYYY-MM-DD')}/${title}.md`)
     formData.append(title + '.md', file, title + '.md');
-    await axios.patch(`/api/updateBlogMd`, formData, {
+    let result=await service.patch(`/api/updateBlogMd`, formData, {
       params: {
         path: `${dayjs(firstTime).format('YYYY-MM-DD')}`,
       }
@@ -112,9 +123,9 @@ function save(id, title, content, tag, type, comments, firstTime, deletedCount,r
       config.images = imgPathNames.data
       config.post=imgPathNames.data[0]
     }
-    await axios.patch(`/api/blogs/${id}`, {
+    await service.patch(`/api/blogs/${id}`, {
       title,
-      content: `/blogs/${dayjs(firstTime).format('YYYY-MM-DD')}/${title}.md`,
+      content: result.data[0],
       tags: tag,
       type,
       comments,
@@ -123,14 +134,14 @@ function save(id, title, content, tag, type, comments, firstTime, deletedCount,r
       ...config
     })
     let info = await axios.get('/api/info')
-    await axios.patch('/api/info', {
+    await service.patch('/api/info', {
       commentCount: info.data.commentCount - deletedCount,
     })
-    await axios.patch("/api/updateTags", {
+    await service.patch("/api/updateTags", {
       type: "add",
       tag
     })
-    await axios.patch('/api/updateInfoLastModified')
+    await service.patch('/api/updateInfoLastModified')
     message.success("保存成功")
     navigator('/bloglist')
   }
@@ -139,20 +150,12 @@ function save(id, title, content, tag, type, comments, firstTime, deletedCount,r
 function cancel() {
   navigator('/bloglist')
 }
-let md=`![image-20220320204359414](C:\\Users\\53039\\Desktop\\blogtest\\image-20220320204359414.png)
 
-![image-20220320204409652](C:\\Users\\53039\\Desktop\\blogtest\\image-20220320204409652.png)
-
-![image-20220320204421834](C:\\Users\\53039\\Desktop\\blogtest\\image-20220320204421834.png)
-
-![image-20220320204437994](C:\\Users\\53039\\Desktop\\blogtest\\image-20220320204437994.png)
-
-![](C:\\Users\\53039\\Desktop\\blogtest\\20211121_205816.jpg)`
 export default memo(function EditBlogPage({my}) {
   navigator = useNavigate()
   let {id} = useParams();
   id = my ? my : id;
-  let {refresh, setRefresh} = store;
+  let {refresh, setRefresh,loading, setLoading} = store;
   let mdFile, tempContent, tempTitle, tempType, tempTag, tempComment, firstTime,tempRecommend;
   tempComment = []
   const [content, setContent] = useState('')
@@ -188,11 +191,14 @@ export default memo(function EditBlogPage({my}) {
     setRecommend(tempRecommend)
     // setComments(tempComment)
   }, [tempContent])
+  useEffect(()=>{
+    fileCount=0;
+  },[])
   return (
       <>
         <div className={"blog-content"}>
           <Space style={{paddingBottom: '10px', textAlign: 'left'}}>
-            <Upload beforeUpload={() => false} onChange={onChange(setContent)} directory>
+            <Upload beforeUpload={() => false} onChange={onChange(setContent,loading,setLoading)} directory>
               <Button icon={<UploadOutlined/>}>上传MarkDown文件夹</Button>
             </Upload>
             <Button type={'primary'} onClick={upLoad(content, setContent, firstTime)}>上传图片</Button>

@@ -1,4 +1,4 @@
-import {memo, useState} from "react";
+import {memo, useEffect, useState} from "react";
 
 import {Button, Image, Input, Space, Upload, message, Radio, Checkbox} from "antd";
 import {useNavigate, useParams} from "react-router-dom";
@@ -7,29 +7,49 @@ import Compressor from 'compressorjs';
 import BlogEditor from "../components/BlogEditor";
 import {UploadOutlined} from "@ant-design/icons";
 import axios from "axios";
+import store from "../reducer/resso";
+import {service} from "../requests/request";
 
 let formData = new FormData();
 let imgPathNames, mdPathName, navigator;
 let uploaded = false;
+let firstInput=true;
+let fileCount=0;
 
-function onChange(setContent) {
+function onChange(setContent, loading, setLoading) {
   return async function (info) {
     uploaded = true;
+    if(firstInput){
+      setLoading(true);
+      firstInput=false;
+    }
     let reg = /\.md$/
     if (reg.exec(info.file.name) !== null) {
       let reader = new FileReader();
       reader.readAsText(info.file, 'utf8')
       reader.onload = () => {
         setContent(reader.result)
+        fileCount++;
+        if(fileCount===info.fileList.length){
+          setLoading(false);
+          firstInput=true;
+          message.success('处理完成')
+        }
       }
     } else {
-      formData.append(info.file.name, info.file);
+      formData.append(info.file.name, info.file,info.file.name);
       new Compressor(info.file, {
         quality: 0.1,
         convertTypes: ['image/png', 'image/webp'],
         convertSize: 1000000,
         success(result) {
           formData.append(`gzip_${info.file.name}`, result, `gzip_${info.file.name}`);
+          fileCount++;
+          if(fileCount===info.fileList.length){
+            setLoading(false);
+            firstInput=true;
+            message.success('处理完成')
+          }
         },
         error(err) {
           console.log(err.message);
@@ -41,7 +61,7 @@ function onChange(setContent) {
 
 function upLoad(content, setContent) {
   return async function () {
-    imgPathNames = await axios.post('/api/blogImages', formData, {
+    imgPathNames = await service.post('/api/blogImages', formData, {
       headers: {
         'Content-Type': 'image/*'
       }
@@ -49,13 +69,13 @@ function upLoad(content, setContent) {
     let reg = /!\[(.*?)\]\((.*?)\)/mg;
     let matcher;
     let tempContent = content;
-    let imgLength=imgPathNames.data.length;
-    for(let index=0;index<imgLength;index++){
-      let splits=imgPathNames.data[index].split('/')
-      let fileName=splits[3]
+    let imgLength = imgPathNames.data.length;
+    for (let index = 0; index < imgLength; index++) {
+      let splits = imgPathNames.data[index].split('/')
+      let fileName = splits[5]
       for (let indexy = 0; (matcher = reg.exec(content)) !== null; indexy++) {
-        if(fileName.includes(matcher[1])){
-          tempContent = tempContent.replace(matcher[0], `![img](${window.url}${imgPathNames.data[index]})`)
+        if (fileName.includes(matcher[1])) {
+          tempContent = tempContent.replace(matcher[0], `![img](${imgPathNames.data[index]})`)
         }
       }
     }
@@ -73,33 +93,32 @@ function publish(title, content, type, tag, recommend) {
     let formData = new FormData();
     let file = new File([content], title + '.md')
     formData.append(title + '.md', file);
-    mdPathName = await axios.post('/api/blogMd', formData, {
+    mdPathName = await service.post('/api/blogMd', formData, {
       headers: {
         'Content-Type': 'application/md'
       }
     })
-    console.log(type)
-      await axios.post("/api/blogs", {
-        type,
-        title,
-        content: mdPathName.data[0],
-        time: +new Date(),
-        recommend,
-        images: imgPathNames ? imgPathNames.data : [],
-        comments: [],
-        tags: tag,
-        post: imgPathNames.data[0],
-        lastModified: +new Date(),
-        views: 0,
-      })
-    await axios.patch("/api/updateInfoBlogs", {
+    await service.post("/api/blogs", {
+      type,
+      title,
+      content: mdPathName.data[0],
+      time: +new Date(),
+      recommend,
+      images: imgPathNames ? imgPathNames.data : [],
+      comments: [],
+      tags: tag,
+      post: imgPathNames.data[0],
+      lastModified: +new Date(),
+      views: 0,
+    })
+    await service.patch("/api/updateInfoBlogs", {
       type: "add"
     })
-    await axios.patch("/api/updateTags", {
+    await service.patch("/api/updateTags", {
       type: "add",
       tag
     })
-    await axios.patch('/api/updateInfoLastModified')
+    await service.patch('/api/updateInfoLastModified')
     message.success("发布成功")
     navigator('/bloglist')
   }
@@ -114,16 +133,17 @@ export default memo(function () {
   const [title, setTitle] = useState('')
   const [type, setType] = useState(1)
   const [tag, setTag] = useState('')
+  const {loading, setLoading} = store;
   const [recommend, setRecommend] = useState(false)
   navigator = useNavigate()
-  // let str = 'adfa ![isf](adfdsaff.jpg)ererer'
-  // str = str.replace(reg, '![img](http://192.168.31.30:3000/test.jpg)')
-  // console.log(str)
+  useEffect(()=>{
+    fileCount=0;
+  },[])
   return (
       <>
         <div className={"blog-content"}>
           <Space style={{paddingBottom: '10px', textAlign: 'left'}}>
-            <Upload beforeUpload={beforeUpload} onChange={onChange(setContent)} directory>
+            <Upload beforeUpload={beforeUpload} onChange={onChange(setContent, loading, setLoading)} directory>
               <Button icon={<UploadOutlined/>}>上传MarkDown文件夹</Button>
             </Upload>
             <Button type={'primary'} onClick={upLoad(content, setContent)}>上传图片</Button>
@@ -147,7 +167,7 @@ export default memo(function () {
           <BlogEditor content={content} setContent={setContent}/>
           <div className={'action-container'}>
             <Space>
-              <Button type={'primary'} onClick={publish(title, content, type, tag,recommend)}>发布</Button>
+              <Button type={'primary'} onClick={publish(title, content, type, tag, recommend)}>发布</Button>
               <Button type={'primary'} onClick={() => {
                 navigator('/bloglist')
               }}>取消</Button>

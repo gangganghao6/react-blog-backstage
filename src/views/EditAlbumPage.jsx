@@ -9,6 +9,7 @@ import Comments from "../components/Comments";
 import store from "../reducer/resso";
 import dayjs from "dayjs";
 import {useImmer} from "use-immer";
+import {service} from "../requests/request";
 
 let formData = new FormData();
 let imgPathNames, uploaded = false, navigator;
@@ -17,7 +18,7 @@ let firstInput = true;
 
 function getAlbumData(id) {
   return function () {
-    return axios.get(`/api/albums/${id}`)
+    return service.get(`/api/albums/${id}`)
   }
 }
 
@@ -30,7 +31,7 @@ const columns = [
     title: '预览',
     dataIndex: 'src',
     render: (e) => {
-      return (<Image height={100} src={`${window.url}${e}`}/>)
+      return (<Image height={100} src={`${e}`}/>)
     },
   },
   {
@@ -42,35 +43,38 @@ const columns = [
   }
 ]
 
-function onChange(info) {
-
-  uploaded = true;
-  if (firstInput) {
-    message.loading('正在处理...')
-    firstInput = false;
+function onChange(loading, setLoading) {
+  return function (info) {
+    uploaded = true;
+    if (firstInput) {
+      setLoading(true)
+      firstInput = false;
+    }
+    formData.append(info.file.name, info.file, info.file.name);
+    new Compressor(info.file, {
+      quality: 0.1,
+      convertTypes: ['image/png', 'image/webp'],
+      convertSize: 1000000,
+      success(result) {
+        formData.append(`gzip_${info.file.name}`, result, `gzip_${info.file.name}`);
+        fileCount++;
+        if (fileCount === info.fileList.length) {
+          setLoading(false)
+          firstInput = true;
+          message.success('处理完成...')
+        }
+      },
+      error(err) {
+        console.log(err.message);
+      },
+    });
   }
-  formData.append(info.file.name, info.file, info.file.name);
-  new Compressor(info.file, {
-    quality: 0.1,
-    convertTypes: ['image/png', 'image/webp'],
-    convertSize: 1000000,
-    success(result) {
-      formData.append(`gzip_${info.file.name}`, result, `gzip_${info.file.name}`);
-      fileCount++;
-      if (fileCount === info.fileList.length) {
-        alert('处理完成')
-        firstInput = true;
-      }
-    },
-    error(err) {
-      console.log(err.message);
-    },
-  });
+
 }
 
 function upLoad(firstTime, setMyData, setMyGzipData) {
   return async function () {
-    imgPathNames = await axios.patch('/api/updateAlbums', formData, {
+    imgPathNames = await service.patch('/api/updateAlbums', formData, {
       headers: {
         'Content-Type': 'image/*'
       },
@@ -89,7 +93,7 @@ function upLoad(firstTime, setMyData, setMyGzipData) {
         })
       }
     })
-    alert("上传成功")
+    message.success("上传成功")
   }
 }
 
@@ -103,18 +107,18 @@ function save(id, name, comments, firstTime, deletedCount, myData, myGzipData) {
     myGzipData.forEach((item) => {
       gzipImgs.push(item.src)
     })
-    await axios.patch(`/api/albums/${id}`, {
+    await service.patch(`/api/albums/${id}`, {
       name,
       comments,
       images: imgs,
       gzipImages: gzipImgs,
       lastModified: +new Date()
     })
-    let info = await axios.get('/api/info')
-    await axios.patch('/api/info', {
+    let info = await service.get('/api/info')
+    await service.patch('/api/info', {
       commentCount: info.data.commentCount - deletedCount,
     })
-    await axios.patch('/api/updateInfoLastModified')
+    await service.patch('/api/updateInfoLastModified')
     message.success("保存成功")
     navigator('/album')
   }
@@ -152,7 +156,7 @@ function deleteAlbums(toDelete, setMyGzipData, setMyData) {
 export default memo(function EditAlbumPage() {
   let {id} = useParams()
   navigator = useNavigate()
-  const {refresh, setRefresh} = store;
+  const {refresh, setRefresh, loading, setLoading} = store;
   let tempComments = [], tempName = '', firstTime = ''
   const [deletedCount, setDeletedCount] = useState(0)
   const [name, setName] = useState(0)
@@ -178,11 +182,14 @@ export default memo(function EditAlbumPage() {
       })
     })
   }, [data])
+  useEffect(() => {
+    fileCount = 0;
+  }, [])
   return (
       <div>
         <Space>
           <Button type={'primary'} onClick={deleteAlbums(toDelete, setMyGzipData, setMyData)}>删除</Button>
-          <Upload beforeUpload={() => false} onChange={onChange} multiple={true}>
+          <Upload beforeUpload={() => false} onChange={onChange(loading, setLoading)} multiple={true}>
             <Button icon={<UploadOutlined/>}>上传照片</Button>
           </Upload>
           <Button type={'primary'} onClick={upLoad(firstTime, setMyData, setMyGzipData)}>上传</Button>
