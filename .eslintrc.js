@@ -5,7 +5,7 @@ module.exports = {
     es6: true,
   },
   // 一个配置文件可以被基础配置中的已启用的规则继承。
-  extends: ["airbnb", "plugin:prettier/recommended"],
+  // extends: ["airbnb", "plugin:prettier/recommended"],
   // 自定义全局变量
   globals: {
     Atomics: "readonly",
@@ -20,7 +20,7 @@ module.exports = {
     ecmaFeatures: {
       jsx: true,
     },
-    ecmaVersion: 2018,
+    ecmaVersion: 2020,
     sourceType: "module",
   },
   // ESLint 支持使用第三方插件。在使用插件之前，你必须使用 npm 安装它。
