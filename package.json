@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@ant-design/icons": "^4.7.0",
+    "@antv/g2": "^4.1.47",
     "@dongyuyu/mockutil": "^0.2.1",
     "@rollup/plugin-alias": "^3.1.9",
     "ahooks": "^3.1.13",

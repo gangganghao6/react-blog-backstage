@@ -8,12 +8,13 @@ import AlbumPublishPage from "../views/AlbumPublishPage";
 import TimeLinePage from "../views/TimeLinePage";
 import TagsPage from "../views/TagsPage";
 import FooterPage from "../views/FooterPage";
+import IndexPage from "../views/IndexPage/IndexPage";
 
 const AllRoutes = () => {
   return useRoutes([
     {
       path: "/index",
-      element: <></>,
+      element: <IndexPage />,
     },
     {
       path: "/bloglist",
