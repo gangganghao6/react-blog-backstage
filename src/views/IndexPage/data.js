@@ -21,3 +21,13 @@ export const getDailyActivityData = async () => {
   })
   return data
 }
+
+export const getTagData = async () => {
+  return [
+    { id: 0, name: "前端", count: 15 },
+    { id: 1, name: "后端", count: 22 },
+    { id: 2, name: "生活", count: 25 },
+    { id: 3, name: "算法", count: 21 },
+    { id: 4, name: "AI", count: 10 },
+  ]
+}
