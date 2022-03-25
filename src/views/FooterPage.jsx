@@ -38,10 +38,11 @@ function onDelete(changed, setChanged, setObj) {
 }
 
 function save(newValue, refresh, setRefresh) {
-  return function () {
-    service.patch('/api/updateFooter', {
+  return async function () {
+    await service.patch('/api/updateFooter', {
       footers: newValue
-    }).then()
+    })
+    await service.patch('/api/updateInfoLastModified')
     message.success('已保存')
     setRefresh(!refresh)
   }

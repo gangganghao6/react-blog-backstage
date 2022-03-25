@@ -7,7 +7,7 @@ import Search from "antd/es/input/Search";
 import {useRequest} from "ahooks";
 import {service} from "../requests/request";
 
-function getTimeLine() {
+function getTags() {
   return service.get('/api/tags')
 }
 
@@ -33,9 +33,10 @@ function onDelete(refresh, setRefresh, content) {
 
 export default memo(function TagsPage() {
   const [refresh, setRefresh] = useState(false)
-  let {data = {data: []}} = useRequest(getTimeLine, {
+  let {data = {data: []}} = useRequest(getTags, {
     refreshDeps: [refresh]
   });
+  console.log(data)
   return <>
     <Timeline mode="left" style={{textAlign:'left',marginLeft:"50%"}}>
       {data.data.map((item) => {

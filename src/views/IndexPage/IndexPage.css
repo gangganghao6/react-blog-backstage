@@ -1,0 +1,27 @@
+.tooltip-wrapper {
+  font-size: 16px;
+  width: 128px;
+  padding: 8px; }
+
+.graph-section-row {
+  margin-bottom: 32px;
+  display: flex;
+  justify-content: space-between; }
+  .graph-section-row .whole {
+    flex: 1; }
+  .graph-section-row .half {
+    width: 50%; }
+
+.graph-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center; }
+
+.graph-title {
+  box-sizing: border-box;
+  text-align: left;
+  border-bottom: 1px solid rgba(1, 22, 42, 0.1);
+  margin: 0 16px 16px 16px;
+  color: #01162a; }
+
+/*# sourceMappingURL=IndexPage.css.map */
