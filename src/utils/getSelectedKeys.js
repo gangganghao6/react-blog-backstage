@@ -1,7 +1,7 @@
 function getSelectedKeys(pathName) {
   let index;
-  let testResult = /\/(index|bloglist|album|timeline|about|footer|setting|tags)/.exec(pathName);
-  testResult = (testResult === null ? '/index' : testResult[0])
+  let testResult = /\/(index|bloglist|album|timeline|about|footer|setting|tags|setting)/.exec(pathName);
+  testResult = testResult === null ? "/index" : testResult[0];
   switch (testResult) {
     case "/index":
       index = 1;
@@ -74,4 +74,4 @@ const siderItem = [
     key: "8",
   },
 ];
-export {getSelectedKeys, siderItem};
+export { getSelectedKeys, siderItem };

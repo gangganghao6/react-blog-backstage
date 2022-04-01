@@ -9,7 +9,7 @@ registerShape("polygon", "boundary-polygon", {
       stroke: "#fff",
       // TODO: 魔法数字，应自适应
       lineWidth: 2,
-      fill: cfg.color
+      fill: cfg.color,
     };
     const points = cfg.points;
     const path = [
@@ -17,18 +17,29 @@ registerShape("polygon", "boundary-polygon", {
       ["L", points[1].x, points[1].y],
       ["L", points[2].x, points[2].y],
       ["L", points[3].x, points[3].y],
-      ["Z"]
+      ["Z"],
     ];
     attrs.path = this.parsePath(path);
     group.addShape("path", {
-      attrs
+      attrs,
     });
     return group;
-  }
+  },
 });
 
 const MONTH_TEXT_ARRAY = [
-  "Jan.", "Feb.", "Mar.", "Apr.", "May.", "Jun.", "Jul.", "Aug.", "Sept.", "Oct.", "Nov.", "Dec."
+  "Jan.",
+  "Feb.",
+  "Mar.",
+  "Apr.",
+  "May.",
+  "Jun.",
+  "Jul.",
+  "Aug.",
+  "Sept.",
+  "Oct.",
+  "Nov.",
+  "Dec.",
 ];
 
 const generateWeekLabelMap = (data) => {
@@ -71,17 +82,17 @@ export const generateDailyActivityChart = (params) => {
   const chart = new Chart({
     container,
     height,
-    width: getDailyActivityChartWidth(height, data)
+    width: getDailyActivityChartWidth(height, data),
   });
   chart.data(data);
   chart.scale({
     day: {
       type: "cat",
-      values: ["Sun.", "Mon.", "Tue.", "Wed.", "Thur.", "Fri.", "Sat."]
+      values: ["Sun.", "Mon.", "Tue.", "Wed.", "Thur.", "Fri.", "Sat."],
     },
     week: {
-      type: "cat"
-    }
+      type: "cat",
+    },
   });
   chart.axis("week", {
     position: "top",
@@ -91,14 +102,14 @@ export const generateDailyActivityChart = (params) => {
       // TODO: 魔法数字，应自适应
       offset: 4,
       formatter: (val) => weekLabelMap[val],
-      autoHide: false
-    }
+      autoHide: false,
+    },
   });
   chart.axis("day", {
     grid: null,
     label: {
-      autoHide: false
-    }
+      autoHide: false,
+    },
   });
   chart.legend(false);
   chart.tooltip({
@@ -112,14 +123,10 @@ export const generateDailyActivityChart = (params) => {
       return `<div class="tooltip-wrapper">
         <div>${title}: ${blogCount}</div>
       </div>`;
-    }
+    },
   });
 
-  chart
-    .polygon()
-    .position("week*day")
-    .color("blogCount", "#BAE7FF-#1890FF-#0050B3")
-    .shape("boundary-polygon");
+  chart.polygon().position("week*day").color("blogCount", "#BAE7FF-#1890FF-#0050B3").shape("boundary-polygon");
   chart.interaction("element-active");
   return chart;
 };

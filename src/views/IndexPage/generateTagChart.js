@@ -5,7 +5,7 @@ export const generateTagChart = (params) => {
   const chart = new Chart({
     container,
     height,
-    width: height
+    width: height,
   });
   chart.data(data);
   chart.legend(false);
@@ -14,12 +14,12 @@ export const generateTagChart = (params) => {
       type: "cat",
     },
   });
-  chart.axis("count", false)
+  chart.axis("count", false);
   chart.axis("name", {
     line: null,
     grid: null,
     tickLine: null,
-  })
+  });
   chart.tooltip({
     showMarkers: false,
     customContent: (title, data) => {
@@ -27,14 +27,11 @@ export const generateTagChart = (params) => {
       return `<div class="tooltip-wrapper">
         <div>${title}: ${blogCount}</div>
       </div>`;
-    }
-  })
+    },
+  });
   chart.coordinate("polar");
-  chart
-    .interval()
-    .position("name*count")
-    .color("name", "#BAE7FF-#1890FF-#0050B3");
-  chart.interaction("element-active")
-  chart.interaction("tooltip")
+  chart.interval().position("name*count").color("name", "#BAE7FF-#1890FF-#0050B3");
+  chart.interaction("element-active");
+  chart.interaction("tooltip");
   return chart;
 };

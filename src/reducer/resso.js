@@ -11,7 +11,7 @@ const store = resso({
     store.loading = set;
   },
   setObj: () => {
-    store.obj = {...store.obj, ["date" + store.count]: +new Date()};
+    store.obj = { ...store.obj, ["date" + store.count]: +new Date() };
     store.addCount();
   },
 });

@@ -1,4 +1,4 @@
-import {useRoutes, Navigate, useLocation} from "react-router-dom";
+import { useRoutes, Navigate, useLocation } from "react-router-dom";
 import BlogListPage from "../views/BlogListPage";
 import EditBlogPage from "../views/EditBlogPage";
 import BlogPublishPage from "../views/BlogPublishPage";
@@ -9,6 +9,7 @@ import TimeLinePage from "../views/TimeLinePage";
 import TagsPage from "../views/TagsPage";
 import FooterPage from "../views/FooterPage";
 import IndexPage from "../views/IndexPage/IndexPage";
+import SettingPage from '../views/SettingPage';
 
 const AllRoutes = () => {
   return useRoutes([
@@ -18,47 +19,51 @@ const AllRoutes = () => {
     },
     {
       path: "/bloglist",
-      element: <BlogListPage/>,
+      element: <BlogListPage />,
     },
     {
       path: "/bloglist/publish",
-      element: <BlogPublishPage/>,
+      element: <BlogPublishPage />,
     },
     {
       path: "/bloglist/edit/:id",
-      element: <EditBlogPage/>,
+      element: <EditBlogPage />,
     },
     {
       path: "/album",
-      element: <AlbumListPage/>
+      element: <AlbumListPage />,
     },
     {
       path: "/album/publish",
-      element: <AlbumPublishPage/>,
+      element: <AlbumPublishPage />,
     },
     {
       path: "/album/edit/:id",
-      element: <EditAlbumPage/>,
+      element: <EditAlbumPage />,
     },
     {
       path: "/timeline",
-      element: <TimeLinePage/>,
+      element: <TimeLinePage />,
     },
     {
       path: "/about",
-      element: <EditBlogPage my={1}/>,
+      element: <EditBlogPage my={1} />,
     },
     {
       path: "/tags",
-      element: <TagsPage/>,
+      element: <TagsPage />,
     },
     {
       path: "/footer",
-      element: <FooterPage/>,
+      element: <FooterPage />,
+    },
+    {
+      path: "/setting",
+      element: <SettingPage />,
     },
     {
       path: "*",
-      element: <Navigate to="/index"/>,
+      element: <Navigate to="/index" />,
     },
   ]);
 };

@@ -7,9 +7,9 @@ import "antd/dist/antd.css";
 
 ReactDOM.render(
   // <React.StrictMode>
-    <HashRouter>
-      <App />
-    </HashRouter>,
+  <HashRouter>
+    <App />
+  </HashRouter>,
   // </React.StrictMode>,
   document.getElementById("root")
 );

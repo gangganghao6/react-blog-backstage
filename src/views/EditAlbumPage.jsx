@@ -1,216 +1,218 @@
-import {memo, useEffect, useState} from "react";
-import {useNavigate, useParams} from "react-router-dom";
-import {useRequest} from "ahooks";
-import axios from "axios";
-import {Button, Divider, Image, Input, List, message, Radio, Space, Table, Upload} from "antd";
-import {UploadOutlined} from "@ant-design/icons";
-import Compressor from "compressorjs";
-import Comments from "../components/Comments";
-import store from "../reducer/resso";
-import dayjs from "dayjs";
-import {useImmer} from "use-immer";
-import {service} from "../requests/request";
+import {memo, useEffect, useState} from 'react';
+import {useNavigate, useParams} from 'react-router-dom';
+import {useRequest} from 'ahooks';
+import {Button, Divider, Drawer, Image, Input, List, message, Popconfirm, Radio, Space, Table, Upload} from 'antd';
+import {UploadOutlined} from '@ant-design/icons';
+import Comments from '../components/Comments';
+import store from '../reducer/resso';
+import {service} from '../requests/request';
 
+let refreshImages = false;
 let formData = new FormData();
-let imgPathNames, uploaded = false, navigator;
+let imgPathNames,
+    uploaded = false,
+    navigator;
 let fileCount = 0;
 let firstInput = true;
 
 function getAlbumData(id) {
-  return function () {
-    return service.get(`/api/albums/${id}`)
-  }
+ return function () {
+  return service.get(`/api/albums/${id}`);
+ };
+}
+
+function deleteImage(id) {
+ return function () {
+  service.delete('/api/albums/images', {
+   data: {ids: [id]}
+  });
+  refreshImages = !refreshImages;
+  message.success('删除成功');
+ };
 }
 
 const columns = [
-  {
-    title: '序号',
-    dataIndex: 'key',
+ {
+  title: 'ID',
+  dataIndex: 'id',
+ },
+ {
+  title: '预览',
+  dataIndex: 'gzipSrc',
+  render: (e) => {
+   return <Image height={'25%'} width={'25%'} src={`${e}`}/>;
   },
-  {
-    title: '预览',
-    dataIndex: 'src',
-    render: (e) => {
-      return (<Image height={100} src={`${e}`}/>)
-    },
+ },
+ {
+  title: 'Src',
+  dataIndex: 'originSrc',
+  render: (text) => {
+   return <a href={text} target={'_blank'}>{text}</a>;
   },
-  {
-    title: '名称',
-    dataIndex: 'src',
-    // render: (text,item) => {
-    //   return <a>{text}</a>
-    // },
-  }
-]
+ },
+ {
+  title: '操作',
+  render: (e, item) => {
+   return (<Popconfirm
+       title="确认删除这张照片吗？"
+       onConfirm={deleteImage(item.id)}
+       okText="确认"
+       cancelText="取消"
+   >
+    <Button type={'primary'} ghost key="comment-basic-reply-to">
+     删除
+    </Button>
+   </Popconfirm>);
+  },
+ },
+];
 
-function onChange(loading, setLoading) {
-  return function (info) {
-    uploaded = true;
-    if (firstInput) {
-      setLoading(true)
-      firstInput = false;
+function onChange(setLoading) {
+ return function (info) {
+  uploaded = true;
+  if (!firstInput) {
+   setLoading(true);
+   firstInput = false;
+  }
+  formData.append('files', info.file, info.file.name);
+  fileCount++;
+  if (fileCount === info.fileList.length - 1) {
+   setLoading(false);
+   firstInput = true;
+   message.success('处理完成...');
+  }
+ };
+}
+
+async function upLoad() {
+ imgPathNames = await service.post(`/api/albums/images`, formData, {
+  headers: {
+   'Content-Type': 'image/*',
+  }
+ });
+ message.success('上传成功');
+}
+
+function save(id, name, postOriginSrc) {
+ return async function () {
+  console.log(postOriginSrc);
+  const result = await service.put(`/api/albums/${id}`, {
+   name,
+   images: imgPathNames ? imgPathNames.data.data : [],
+   lastModified: +new Date(),
+  });
+  if (imgPathNames) {
+   for (const item of result.data.data.images) {
+    if (item.originSrc === postOriginSrc) {
+     await service.put(`/api/albums/${result.data.data.id}`, {
+      postId: item.id
+     });
     }
-    formData.append(info.file.name, info.file, info.file.name);
-    new Compressor(info.file, {
-      quality: 0.1,
-      convertTypes: ['image/png', 'image/webp'],
-      convertSize: 1000000,
-      success(result) {
-        formData.append(`gzip_${info.file.name}`, result, `gzip_${info.file.name}`);
-        fileCount++;
-        if (fileCount === info.fileList.length) {
-          setLoading(false)
-          firstInput = true;
-          message.success('处理完成...')
-        }
-      },
-      error(err) {
-        console.log(err.message);
-      },
-    });
+   }
+  } else if (postOriginSrc) {
+   await service.put(`/api/albums/${result.data.data.id}`, {
+    postId: postOriginSrc
+   });
   }
-
+  await service.put('/api/info');
+  message.success('保存成功');
+  navigator('/album');
+ };
 }
 
-function upLoad(firstTime, setMyData, setMyGzipData) {
-  return async function () {
-    imgPathNames = await service.patch('/api/updateAlbums', formData, {
-      headers: {
-        'Content-Type': 'image/*'
-      },
-      params: {
-        path: `${dayjs(firstTime).format('YYYY-MM-DD')}`,
-      }
-    })
-    imgPathNames.data.forEach((item) => {
-      if (item.includes('gzip_')) {
-        setMyGzipData((draft) => {
-          draft.push({src: item, key: draft.length})
-        })
-      } else {
-        setMyData((draft) => {
-          draft.push({src: item, key: draft.length})
-        })
-      }
-    })
-    message.success("上传成功")
-  }
-}
-
-function save(id, name, comments, firstTime, deletedCount, myData, myGzipData) {
-  return async function () {
-    let imgs = []
-    let gzipImgs = []
-    myData.forEach((item) => {
-      imgs.push(item.src)
-    })
-    myGzipData.forEach((item) => {
-      gzipImgs.push(item.src)
-    })
-    await service.patch(`/api/albums/${id}`, {
-      name,
-      comments,
-      images: imgs,
-      gzipImages: gzipImgs,
-      lastModified: +new Date()
-    })
-    let info = await service.get('/api/info')
-    await service.patch('/api/info', {
-      commentCount: info.data.commentCount - deletedCount,
-    })
-    await service.patch('/api/updateInfoLastModified')
-    message.success("保存成功")
-    navigator('/album')
-  }
-}
-
-function select(setToDelete) {
-  return function (selectedRowKeys, selectedRows) {
-    setToDelete(selectedRowKeys)
-  }
-}
-
-function deleteAlbums(toDelete, setMyGzipData, setMyData) {
-  return function () {
-    setMyData((draft) => {
-      toDelete.forEach((item) => {
-        draft.forEach((itemx, index) => {
-          if (itemx.key === item) {
-            draft.splice(index, 1)
-          }
-        })
-      })
-    })
-    setMyGzipData((draft) => {
-      toDelete.forEach((item) => {
-        draft.forEach((itemx, index) => {
-          if (itemx.key === item) {
-            draft.splice(index, 1)
-          }
-        })
-      })
-    })
-  }
-}
 
 export default memo(function EditAlbumPage() {
-  let {id} = useParams()
-  navigator = useNavigate()
-  const {refresh, setRefresh, loading, setLoading} = store;
-  let tempComments = [], tempName = '', firstTime = ''
-  const [deletedCount, setDeletedCount] = useState(0)
-  const [name, setName] = useState(0)
-  const [toDelete, setToDelete] = useState([])
-  const [myData, setMyData] = useImmer([])
-  const [myGzipData, setMyGzipData] = useImmer([])
-  let {data = {data: {gzipImages: [], images: [], comments: []}}} = useRequest(getAlbumData(id))
+ let {id} = useParams();
+ navigator = useNavigate();
+ const {refresh, setRefresh, setLoading} = store;
+ const [name, setName] = useState('');
+ const [comments, setComments] = useState([]);
+ const [postOriginSrc, setPostOriginSrc] = useState(undefined);
+ const [images, setImages] = useState([]);
+ const [visible, setVisible] = useState(false);
+ let {data, loading: loadingx} = useRequest(getAlbumData(id), {
+  refreshDeps: [id, refresh, refreshImages],
+ });
+ const showDrawer = () => {
+  setVisible(true);
+ };
+ const closeDrawer = () => {
+  setVisible(false);
+ };
+ const selectPost = (e) => {
+  setPostOriginSrc(e.target.value);
+ };
+ useEffect(() => {
   if (data) {
-    tempComments = data.data.comments;
-    tempName = data.data.name;
-    firstTime = data.data.time
+   setName(data.data.data.name);
+   setComments(data.data.data.comments);
+   setPostOriginSrc(data.data.data.postId);
+   setImages(data.data.data.images);
   }
-  useEffect(() => {
-    setName(tempName)
-    setMyData((draft) => {
-      data.data.images.forEach((item, index) => {
-        draft.push({src: item, key: index})
-      })
-    })
-    setMyGzipData((draft) => {
-      data.data.gzipImages.forEach((item, index) => {
-        draft.push({src: item, key: index})
-      })
-    })
-  }, [data])
-  useEffect(() => {
-    fileCount = 0;
-  }, [])
-  return (
-      <div>
-        <Space>
-          <Button type={'primary'} onClick={deleteAlbums(toDelete, setMyGzipData, setMyData)}>删除</Button>
-          <Upload beforeUpload={() => false} onChange={onChange(loading, setLoading)} multiple={true}>
-            <Button icon={<UploadOutlined/>}>上传照片</Button>
-          </Upload>
-          <Button type={'primary'} onClick={upLoad(firstTime, setMyData, setMyGzipData)}>上传</Button>
-          相册名称： <Input value={name} onChange={(e) => {
-          setName(e.target.value)
-        }}/>
-        </Space>
-        <Table rowSelection={{onChange: select(setToDelete)}}
-               columns={columns}
-               dataSource={myGzipData}
-               pagination={{pageSize: 20}}/>
-        <Comments comments={tempComments} refresh={refresh} setRefresh={setRefresh}
-                  setDeletedCount={setDeletedCount}
-                  deletedCount={deletedCount}/>
-        <Space>
-          <Button type={'primary'}
-                  onClick={save(id, name, tempComments, firstTime, deletedCount, myData, myGzipData)}>保存</Button>
-          <Button type={'primary'} onClick={() => {
-            navigator('/album')
-          }}>取消</Button>
-        </Space>
-      </div>
-  )
+ }, [loadingx]);
+ useEffect(() => {
+  return function () {
+   fileCount = 0;
+   imgPathNames = undefined;
+  };
+ }, []);
+ return (
+     <div>
+      <Space>
+       <Upload beforeUpload={() => false} onChange={onChange(setLoading)} multiple={true}>
+        <Button icon={<UploadOutlined/>}>上传照片</Button>
+       </Upload>
+       <Button type={'primary'} onClick={upLoad}>
+        上传
+       </Button>
+       相册名称：{' '}
+       <Input
+           value={name}
+           onChange={(e) => {
+            setName(e.target.value);
+           }}
+       />
+       <Button type={'primary'} ghost onClick={showDrawer}>自定义封面</Button>
+       <Drawer title="自定义你的封面" placement="right" onClose={closeDrawer} visible={visible}>
+        <Radio.Group onChange={selectPost} value={postOriginSrc}>
+         <Space direction="vertical">
+          {imgPathNames ? imgPathNames.data.data.concat(data.data.data.images).map((item) => {
+           return (<Radio value={item.originSrc}>
+            <img src={item.gzipSrc} style={{objectFit: 'cover', width: '100%'}} alt={item.originSrc}/>
+           </Radio>);
+          }) : (data ? data.data.data.images.map((item) => {
+           return (<Radio value={item.id}>
+            <img src={item.gzipSrc} style={{objectFit: 'cover', width: '100%'}} alt={item.id}/>
+           </Radio>);
+          }) : '')}
+         </Space>
+        </Radio.Group>
+       </Drawer>
+      </Space>
+      <Table
+          columns={columns}
+          dataSource={images}
+          pagination={{pageSize: 20}}
+      />
+      <Space>
+       <Button type={'primary'} onClick={save(id, name, postOriginSrc)}>
+        保存
+       </Button>
+       <Button
+           type={'primary'}
+           onClick={() => {
+            navigator('/album');
+           }}
+       >
+        取消
+       </Button>
+      </Space>
+      <Comments
+          comments={comments}
+          type={'albums'}
+          setRefresh={setRefresh}
+      />
+
+     </div>
+ );
 });

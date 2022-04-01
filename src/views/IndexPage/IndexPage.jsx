@@ -5,7 +5,6 @@ import { generateDailyActivityChart } from "./generateDailyActivityChart";
 import { generateTagChart } from "./generateTagChart";
 
 const IndexPage = () => {
-
   const calenderContainer = useRef();
   const tagGraphContainer = useRef();
 
@@ -14,33 +13,34 @@ const IndexPage = () => {
       generateDailyActivityChart({
         container: calenderContainer.current,
         data,
-        height: 120
+        height: 120,
       }).render();
     });
     getTagData().then((data) => {
       generateTagChart({
         container: tagGraphContainer.current,
         data,
-        height: 160
+        height: 160,
       }).render();
-    })
+    });
   }, []);
 
-  return <>
-    <div className="graph-section-row">
-      <div className="whole">
-        <h2 className="graph-title">更新日历</h2>
-        <div className="graph-wrapper" ref={calenderContainer} />
+  return (
+    <>
+      <div className="graph-section-row">
+        <div className="whole">
+          <h2 className="graph-title">更新日历</h2>
+          <div className="graph-wrapper" ref={calenderContainer} />
+        </div>
       </div>
-    </div>
-    <div className="graph-section-row">
-      <div className="half">
-        <h2 className="graph-title">标签玫瑰图</h2>
-        <div className="graph-wrapper" ref={tagGraphContainer} />
+      <div className="graph-section-row">
+        <div className="half">
+          <h2 className="graph-title">标签玫瑰图</h2>
+          <div className="graph-wrapper" ref={tagGraphContainer} />
+        </div>
       </div>
-    </div>
-  </>;
-
+    </>
+  );
 };
 
 export default IndexPage;

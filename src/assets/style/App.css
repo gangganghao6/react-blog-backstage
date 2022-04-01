@@ -1,6 +1,12 @@
 @font-face {
   font-family: Alifont;
   src: url("../font/AlibabaSans-Regular.otf"); }
+.ant-layout {
+  min-height: 100vh !important; }
+
+.ant-layout-content {
+  background-color: white; }
+
 .App {
   width: 100vw;
   height: 100%; }
