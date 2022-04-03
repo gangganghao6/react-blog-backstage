@@ -3,12 +3,12 @@ import {memo, useEffect, useState} from 'react';
 import {Button, Image, Input, Space, Upload, message, Radio, Checkbox, Drawer} from 'antd';
 import {useNavigate, useParams} from 'react-router-dom';
 import '../assets/style/blogContent.scss';
-import Compressor from 'compressorjs';
 import BlogEditor from '../components/BlogEditor';
 import {UploadOutlined} from '@ant-design/icons';
 import axios from 'axios';
 import store from '../reducer/resso';
 import {service} from '../requests/request';
+import SelectPublishAlbumPost from '../components/SelectPublishAlbumPost';
 
 let formData = new FormData();
 let imgPathNames=undefined, navigator;
@@ -66,7 +66,6 @@ function upLoad(content, setContent) {
 
 function publish(title, content, type, tag, recommend, postOriginSrc) {
  return async function () {
-  console.log(title, tag, type, uploaded, postOriginSrc);
   if (title === '' || tag === '' || uploaded === false || postOriginSrc === undefined) {
    message.error('还有东西没填哦');
    return;
@@ -116,14 +115,9 @@ export default memo(function () {
  const [recommend, setRecommend] = useState(false);
  const [postOriginSrc, setPostOriginSrc] = useState(undefined);
  const [visible, setVisible] = useState(false);
+ const [page, setPage] = useState(1);
  const showDrawer = () => {
   setVisible(true);
- };
- const closeDrawer = () => {
-  setVisible(false);
- };
- const selectPost = (e) => {
-  setPostOriginSrc(e.target.value);
  };
  navigator = useNavigate();
  useEffect(() => {
@@ -174,17 +168,9 @@ export default memo(function () {
          推荐
         </Checkbox>
         <Button type={'primary'} ghost onClick={showDrawer}>自定义封面</Button>
-        <Drawer title="自定义你的封面" placement="right" onClose={closeDrawer} visible={visible}>
-         <Radio.Group onChange={selectPost} value={postOriginSrc}>
-          <Space direction="vertical">
-           {imgPathNames ? imgPathNames.data.data.map((item) => {
-            return (<Radio value={item.originSrc}>
-             <img src={item.gzipSrc} style={{objectFit: 'cover', width: '100%'}} alt={item.originSrc}/>
-            </Radio>);
-           }) : ''}
-          </Space>
-         </Radio.Group>
-        </Drawer>
+        <SelectPublishAlbumPost postOriginSrc={postOriginSrc} imgPathNames={imgPathNames} visible={visible}
+                                setPostOriginSrc={setPostOriginSrc}
+                                setVisible={setVisible} page={page} setPage={setPage}/>
        </Space>
        <BlogEditor content={content} setContent={setContent}/>
        <div className={'action-container'}>

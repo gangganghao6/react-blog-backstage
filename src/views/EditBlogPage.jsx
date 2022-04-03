@@ -9,9 +9,9 @@ import {useRequest} from 'ahooks';
 import axios from 'axios';
 import dayjs from 'dayjs';
 import store from '../reducer/resso';
-import Compressor from 'compressorjs';
 import {UploadOutlined} from '@ant-design/icons';
 import {service} from '../requests/request';
+import SelectEditBlogPost from '../components/SelectEditBlogPost';
 
 let formData = new FormData();
 let imgPathNames, navigator;
@@ -126,14 +126,9 @@ export default memo(function EditBlogPage({my}) {
  const [comments, setComments] = useState([]);
  const [postOriginSrc, setPostOriginSrc] = useState(undefined);
  const [visible, setVisible] = useState(false);
+ const [page, setPage] = useState(1);
  const showDrawer = () => {
   setVisible(true);
- };
- const closeDrawer = () => {
-  setVisible(false);
- };
- const selectPost = (e) => {
-  setPostOriginSrc(e.target.value);
  };
  let {data, loading: loadingx} = useRequest(getBlogDetail(id), {
   refreshDeps: [id, refresh],
@@ -200,41 +195,29 @@ export default memo(function EditBlogPage({my}) {
          推荐
         </Checkbox>
         <Button type={'primary'} ghost onClick={showDrawer}>自定义封面</Button>
-        <Drawer title="自定义你的封面" placement="right" onClose={closeDrawer} visible={visible}>
-         <Radio.Group onChange={selectPost} value={postOriginSrc}>
-          <Space direction="vertical">
-           {imgPathNames ? imgPathNames.data.data.map((item) => {
-            return (<Radio value={item.originSrc}>
-             <img src={item.gzipSrc} style={{objectFit: 'cover', width: '100%'}} alt={item.originSrc}/>
-            </Radio>);
-           }) : (data ? data.data.data.images.map((item) => {
-            return (<Radio value={item.id}>
-             <img src={item.gzipSrc} style={{objectFit: 'cover', width: '100%'}} alt={item.id}/>
-            </Radio>);
-           }) : '')}
-          </Space>
-         </Radio.Group>
-        </Drawer>
+        <SelectEditBlogPost postOriginSrc={postOriginSrc} imgPathNames={imgPathNames} visible={visible}
+                            setPostOriginSrc={setPostOriginSrc} data={data}
+                            setVisible={setVisible} page={page} setPage={setPage}/>
        </Space>
        <BlogEditor content={content} setContent={setContent}/>
+       <div className={'action-container'}>
+       <Space>
+        <Button
+            type={'primary'}
+            onClick={save(id, title, content, tag, type, recommend, postOriginSrc)}
+        >
+         保存更改
+        </Button>
+        <Button type={'primary'} onClick={cancel}>
+         取消
+        </Button>
+       </Space>
+      </div>
        <Comments
            comments={comments}
            setRefresh={setRefresh}
            type={'blogs'}
        />
-       <div className={'action-container'}>
-        <Space>
-         <Button
-             type={'primary'}
-             onClick={save(id, title, content, tag, type, recommend, postOriginSrc)}
-         >
-          保存更改
-         </Button>
-         <Button type={'primary'} onClick={cancel}>
-          取消
-         </Button>
-        </Space>
-       </div>
       </div>
      </>
  );

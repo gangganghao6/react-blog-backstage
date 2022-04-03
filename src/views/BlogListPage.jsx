@@ -158,7 +158,7 @@ export default memo(function BlogList() {
   total = data.data.data.count;
   data = data.data.data.list;
   data.forEach((item) => {
-   item.time = dayjs(item.time).format('YYYY-MM-DD HH:mm:ss');
+   item.time = dayjs(parseInt(item.time)).format('YYYY-MM-DD HH:mm:ss');
    let totalCount = item.comments.length;
    item.comments.forEach((item) => {
     totalCount += item.innerComments.length;

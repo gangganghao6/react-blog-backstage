@@ -45,7 +45,7 @@ const MONTH_TEXT_ARRAY = [
 const generateWeekLabelMap = (data) => {
   const map = {};
   const alreadyInMapMonth = new Set();
-  data.slice(2).forEach((item) => {
+  data.forEach((item) => {
     const month = new Date(item.date).getMonth();
     if (alreadyInMapMonth.size >= 11) {
       alreadyInMapMonth.clear();
@@ -119,14 +119,14 @@ export const generateDailyActivityChart = (params) => {
       if (!data.length) {
         return;
       }
-      const blogCount = data[0]?.data?.blogCount || 0;
+      const visitCount = data[0]?.data?.visitCount || 0;
       return `<div class="tooltip-wrapper">
-        <div>${title}: ${blogCount}</div>
+        <div>${title}: ${visitCount}</div>
       </div>`;
     },
   });
 
-  chart.polygon().position("week*day").color("blogCount", "#BAE7FF-#1890FF-#0050B3").shape("boundary-polygon");
+  chart.polygon().position("week*day").color("visitCount", "#BAE7FF-#1890FF-#0050B3").shape("boundary-polygon");
   chart.interaction("element-active");
   return chart;
 };

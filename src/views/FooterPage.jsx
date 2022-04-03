@@ -4,7 +4,6 @@ import {useRequest} from 'ahooks';
 import axios from 'axios';
 import '../assets/style/footer.scss';
 import 'rc-footer/assets/index.css';
-import ReactJson from 'react-json-view';
 import {useImmer} from 'use-immer';
 import {Button, message, notification} from 'antd';
 import {service} from '../requests/request';

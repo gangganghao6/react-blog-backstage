@@ -7,23 +7,22 @@ import Search from 'antd/es/input/Search';
 
 const {Option} = Select;
 
-function upLoadHeader(setVisible, setImageUrl) {
+function upLoadHeader(setVisible, setImageUrl, setFileList, header) {
  return async function (e) {
+  setFileList(e.fileList);
   if (e.fileList.length >= 1) {
    setVisible(false);
+   let formData = new FormData();
+   formData.append('files', e.file, e.file.name);
+   const result = await service.post('/api/info/userHeader', formData);
+   setImageUrl(result.data.data.userHeader);
   } else {
    setVisible(true);
+   setImageUrl(header);
   }
-  let formData = new FormData();
-  formData.append('files', e.file, e.file.name);
-  const result = await service.post('/api/info/userHeader', formData);
-  setImageUrl(result.data.data.userHeader);
  };
 }
 
-function previewHeader(file) {
- console.log(2, file);
-}
 
 function getUserInfo() {
  return service.get('/api/info/userInfo');
@@ -41,8 +40,9 @@ function changeDescription(setDescription) {
  };
 }
 
-function save(imageUrl, name, description, setRefresh, refresh) {
+function save(imageUrl, name, description, setRefresh, refresh, setFileList, setVisible) {
  return function () {
+
   service.put('/api/info/userInfo', {
    userInfo: {
     userHeader: imageUrl,
@@ -50,7 +50,10 @@ function save(imageUrl, name, description, setRefresh, refresh) {
     userDescription: description
    }
   });
+  service.put('/api/info').then()
   setRefresh(!refresh);
+  setFileList([]);
+  setVisible(true);
   message.success('修改成功');
  };
 }
@@ -76,6 +79,7 @@ function changeTopCard(id, color, setRefresh) {
     color
    });
    setRefresh((pre) => !pre);
+   await service.put('/api/info')
    message.success('修改成功');
   } else {
    message.error('输入正确的ID！');
@@ -98,6 +102,8 @@ export default memo(function SettingPage() {
  const [searchTitle, setSearchTitle] = useState('');
  const [seatchId, setSearchId] = useState(undefined);
  const [topCardColor, setTopCardColor] = useState('black');
+ const [fileList, setFileList] = useState([]);
+ const [header, setHeader] = useState('');
  let {data, loading} = useRequest(getUserInfo, {
   refreshDeps: [refresh]
  });
@@ -105,14 +111,9 @@ export default memo(function SettingPage() {
   if (data && !loading) {
    setName(data.data.data.userName);
    setDescription(data.data.data.userDescription);
+   setHeader(data.data.data.userHeader);
   }
  }, [data]);
- const uploadButton = (
-     <div style={{cursor: 'pointer'}}>
-      <img src={data ? data.data.data.userHeader : ''}
-           style={{width: '100%'}}/>
-     </div>
- );
  return <>
   <Space direction={'vertical'}>
    <h2><ControlOutlined/>设置左侧菜单用户信息</h2>
@@ -120,10 +121,13 @@ export default memo(function SettingPage() {
     <Upload
         listType={'picture-card'}
         beforeUpload={() => false}
-        onChange={upLoadHeader(setVisible, setImageUrl)}
-        onPreview={previewHeader}
+        onChange={upLoadHeader(setVisible, setImageUrl, setFileList, header)}
+        fileList={fileList}
     >
-     {visible ? uploadButton : ''}
+     {visible ? <div style={{cursor: 'pointer'}}>
+      <img src={header}
+           style={{width: '100%'}}/>
+     </div> : ''}
     </Upload>
     <Space direction={'vertical'}>
      <div>
@@ -136,7 +140,8 @@ export default memo(function SettingPage() {
       <Input size="large" placeholder="描述(限制12个字)" onChange={changeDescription(setDescription)}
              value={description} maxLength={12} style={{width: '300px'}} prefix={<SolutionOutlined/>}/>
      </div>
-     <Button type={'primary'} ghost onClick={save(imageUrl, name, description, setRefresh, refresh)}>保存</Button>
+     <Button type={'primary'} ghost
+             onClick={save(imageUrl, name, description, setRefresh, refresh, setFileList, setVisible)}>保存</Button>
     </Space>
    </Space>
    <Divider dashed style={{backgroundColor: 'black'}}/>

@@ -6,6 +6,7 @@ import {UploadOutlined} from '@ant-design/icons';
 import Comments from '../components/Comments';
 import store from '../reducer/resso';
 import {service} from '../requests/request';
+import SelectPublishAlbumPost from '../components/SelectPublishAlbumPost';
 
 let refreshImages = false;
 let formData = new FormData();
@@ -59,13 +60,11 @@ async function upLoad() {
    'Content-Type': 'image/*',
   }
  });
- console.log(imgPathNames);
  message.success('上传成功');
 }
 
 function save(name, postOriginSrc) {
  return async function () {
-  console.log(postOriginSrc);
   const result = await service.post(`/api/albums`, {
    name,
    images: imgPathNames ? imgPathNames.data.data : [],
@@ -96,15 +95,11 @@ export default memo(function EditAlbumPage() {
  const [postOriginSrc, setPostOriginSrc] = useState(undefined);
  const [images, setImages] = useState([]);
  const [visible, setVisible] = useState(false);
+ const [page, setPage] = useState(1);
  const showDrawer = () => {
   setVisible(true);
  };
- const closeDrawer = () => {
-  setVisible(false);
- };
- const selectPost = (e) => {
-  setPostOriginSrc(e.target.value);
- };
+
  useEffect(() => {
   return function () {
    fileCount = 0;
@@ -129,17 +124,9 @@ export default memo(function EditAlbumPage() {
            }}
        />
        <Button type={'primary'} ghost onClick={showDrawer}>自定义封面</Button>
-       <Drawer title="自定义你的封面" placement="right" onClose={closeDrawer} visible={visible}>
-        <Radio.Group onChange={selectPost} value={postOriginSrc}>
-         <Space direction="vertical">
-          {imgPathNames ? imgPathNames.data.data.map((item) => {
-           return (<Radio value={item.originSrc}>
-            <img src={item.gzipSrc} style={{objectFit: 'cover', width: '100%'}} alt={item.originSrc}/>
-           </Radio>);
-          }) : ''}
-         </Space>
-        </Radio.Group>
-       </Drawer>
+       <SelectPublishAlbumPost postOriginSrc={postOriginSrc} imgPathNames={imgPathNames} visible={visible}
+                               setPostOriginSrc={setPostOriginSrc}
+                               setVisible={setVisible} page={page} setPage={setPage}/>
       </Space>
       <Table
           columns={columns}

@@ -44,7 +44,7 @@ const components = {
  },
  img({...props}) {
   let splits = props.src.split('/');
-  splits[splits.length - 1] = `gzip_${splits[splits.length - 1]}`;
+  splits[splits.length - 1] = `gzip_${splits[splits.length - 1]}.webp`;
   let all = splits.join('/');
   return (
       <div style={{overflow: 'hidden'}}>

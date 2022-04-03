@@ -1,6 +1,6 @@
 import { Chart } from "@antv/g2";
 
-export const generateTagChart = (params) => {
+export const generateBrowserChart = (params) => {
   const { container, data, height,width } = params;
   const chart = new Chart({
     container,
@@ -30,7 +30,7 @@ export const generateTagChart = (params) => {
     },
   });
   chart.coordinate("polar");
-  chart.interval().position("device*count").color("device", "#BAE7FF-#1890FF-#0050B3");
+  chart.interval().position("browser*count").color("browser", "#BAE7FF-#1890FF-#0050B3");
   chart.interaction("element-active");
   chart.interaction("tooltip");
   return chart;

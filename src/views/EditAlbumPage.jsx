@@ -1,11 +1,26 @@
 import {memo, useEffect, useState} from 'react';
 import {useNavigate, useParams} from 'react-router-dom';
 import {useRequest} from 'ahooks';
-import {Button, Divider, Drawer, Image, Input, List, message, Popconfirm, Radio, Space, Table, Upload} from 'antd';
+import {
+ Button,
+ Divider,
+ Drawer,
+ Image,
+ Input,
+ List,
+ message,
+ Pagination,
+ Popconfirm,
+ Radio,
+ Space,
+ Table,
+ Upload
+} from 'antd';
 import {UploadOutlined} from '@ant-design/icons';
 import Comments from '../components/Comments';
 import store from '../reducer/resso';
 import {service} from '../requests/request';
+import SelectEditAlbumPost from '../components/SelectEditAlbumPost';
 
 let refreshImages = false;
 let formData = new FormData();
@@ -27,6 +42,7 @@ function deleteImage(id) {
    data: {ids: [id]}
   });
   refreshImages = !refreshImages;
+  service.put('/api/info')
   message.success('删除成功');
  };
 }
@@ -95,7 +111,6 @@ async function upLoad() {
 
 function save(id, name, postOriginSrc) {
  return async function () {
-  console.log(postOriginSrc);
   const result = await service.put(`/api/albums/${id}`, {
    name,
    images: imgPathNames ? imgPathNames.data.data : [],
@@ -130,18 +145,14 @@ export default memo(function EditAlbumPage() {
  const [postOriginSrc, setPostOriginSrc] = useState(undefined);
  const [images, setImages] = useState([]);
  const [visible, setVisible] = useState(false);
+ const [page, setPage] = useState(1);
  let {data, loading: loadingx} = useRequest(getAlbumData(id), {
   refreshDeps: [id, refresh, refreshImages],
  });
  const showDrawer = () => {
   setVisible(true);
  };
- const closeDrawer = () => {
-  setVisible(false);
- };
- const selectPost = (e) => {
-  setPostOriginSrc(e.target.value);
- };
+
  useEffect(() => {
   if (data) {
    setName(data.data.data.name);
@@ -173,21 +184,9 @@ export default memo(function EditAlbumPage() {
            }}
        />
        <Button type={'primary'} ghost onClick={showDrawer}>自定义封面</Button>
-       <Drawer title="自定义你的封面" placement="right" onClose={closeDrawer} visible={visible}>
-        <Radio.Group onChange={selectPost} value={postOriginSrc}>
-         <Space direction="vertical">
-          {imgPathNames ? imgPathNames.data.data.concat(data.data.data.images).map((item) => {
-           return (<Radio value={item.originSrc}>
-            <img src={item.gzipSrc} style={{objectFit: 'cover', width: '100%'}} alt={item.originSrc}/>
-           </Radio>);
-          }) : (data ? data.data.data.images.map((item) => {
-           return (<Radio value={item.id}>
-            <img src={item.gzipSrc} style={{objectFit: 'cover', width: '100%'}} alt={item.id}/>
-           </Radio>);
-          }) : '')}
-         </Space>
-        </Radio.Group>
-       </Drawer>
+       <SelectEditAlbumPost postOriginSrc={postOriginSrc} imgPathNames={imgPathNames} visible={visible}
+                   setPostOriginSrc={setPostOriginSrc} data={data}
+                   setVisible={setVisible} page={page} setPage={setPage}/>
       </Space>
       <Table
           columns={columns}

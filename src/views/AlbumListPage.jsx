@@ -66,16 +66,8 @@ const columns = [
          <Popconfirm
              title="删除后不可恢复,确定删除吗?"
              onConfirm={async () => {
-              let totalCount = item.comments.length;
-              item.comments.forEach((itemx) => {
-               totalCount += itemx.children.length;
-              });
-              let info = await axios.get('/api/info');
-              await service.patch('/api/info', {
-               commentCount: info.data.commentCount - totalCount,
-              });
               await service.delete(`/api/albums/${item.id}`);
-              await service.patch('/api/updateInfoLastModified');
+              await service.put('/api/info');
               message.success('删除成功');
               setRefresh();
              }}
@@ -162,7 +154,7 @@ export default memo(function AlbumList() {
   total = data.data.data.count;
   data = data.data.data.list;
   data.forEach((item) => {
-   item.time = dayjs(item.time).format('YYYY-MM-DD HH:mm:ss');
+   item.time = dayjs(parseInt(item.time)).format('YYYY-MM-DD HH:mm:ss');
    let totalCount = item.comments.length;
    item.comments.forEach((item) => {
     totalCount += item.innerComments.length;
