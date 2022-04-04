@@ -1,6 +1,6 @@
 import {memo, useEffect, useState} from 'react';
 
-import {Button, Image, Input, Space, Upload, message, Radio, Checkbox, Drawer} from 'antd';
+import {Button, Image, Input, Space, Upload, message, Radio, Checkbox, Drawer, Progress} from 'antd';
 import {useNavigate, useParams} from 'react-router-dom';
 import '../assets/style/blogContent.scss';
 import BlogEditor from '../components/BlogEditor';
@@ -11,15 +11,16 @@ import {service} from '../requests/request';
 import SelectPublishAlbumPost from '../components/SelectPublishAlbumPost';
 
 let formData = new FormData();
-let imgPathNames=undefined, navigator;
+let imgPathNames = undefined, navigator;
 let uploaded = false;
 let firstInput = true;
 let fileCount = 0;
 
-function onChange(setContent, loading, setLoading) {
+function onChange(setContent, loading, setLoading,setPercent) {
  return async function (info) {
   uploaded = true;
   if (firstInput) {
+   setPercent(0);
    setLoading(true);
    firstInput = false;
   }
@@ -40,12 +41,15 @@ function onChange(setContent, loading, setLoading) {
  };
 }
 
-function upLoad(content, setContent) {
+function upLoad(content, setContent,setPercent) {
  return async function () {
   imgPathNames = await service.post('/api/blogs/images', formData, {
    headers: {
     'Content-Type': 'image/*',
-   },
+   }, onUploadProgress: (progressEvent) => {
+    const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+    setPercent(percentCompleted);
+   }
   });
   let reg = /!\[(.*?)\]\((.*?)\)/gm;
   let matcher;
@@ -116,6 +120,7 @@ export default memo(function () {
  const [postOriginSrc, setPostOriginSrc] = useState(undefined);
  const [visible, setVisible] = useState(false);
  const [page, setPage] = useState(1);
+ const [percent, setPercent] = useState(0);
  const showDrawer = () => {
   setVisible(true);
  };
@@ -125,16 +130,28 @@ export default memo(function () {
    fileCount = 0;
    imgPathNames = undefined;
    formData = new FormData();
-  }
+  };
  }, []);
  return (
      <>
       <div className={'blog-content'}>
        <Space style={{paddingBottom: '10px', textAlign: 'left'}}>
-        <Upload beforeUpload={beforeUpload} onChange={onChange(setContent, loading, setLoading)} directory>
+        <Progress type="circle" percent={percent} format={() => {
+         let message = '';
+         if (percent === 100) {
+          message = '压缩中...';
+         } else {
+          message = `${percent}%`;
+         }
+         if (!loading) {
+          message = '完成';
+         }
+         return message;
+        }}/>
+        <Upload beforeUpload={beforeUpload} onChange={onChange(setContent, loading, setLoading, setPercent)} directory>
          <Button icon={<UploadOutlined/>}>上传MarkDown文件夹</Button>
         </Upload>
-        <Button type={'primary'} onClick={upLoad(content, setContent)}>
+        <Button type={'primary'} onClick={upLoad(content, setContent, setPercent)}>
          上传图片
         </Button>
         标题：

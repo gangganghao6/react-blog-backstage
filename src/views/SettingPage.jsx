@@ -61,6 +61,9 @@ function save(imageUrl, name, description, setRefresh, refresh, setFileList, set
 function onChange(setSearchTitle, setSearchId) {
  return async function (e) {
   const result = await service.get(`/api/blogs/${e.target.value}`);
+  await service.put(`/blogs/view/${pre.data.data.topCardId}`, {
+   value: -1
+  });
   if (result.data.data) {
    setSearchId(result.data.data.id);
    setSearchTitle(result.data.data.title);

@@ -1,6 +1,6 @@
 import {memo, useEffect, useState} from 'react';
 
-import {Button, Checkbox, Drawer, Image, Input, message, Radio, Space, Upload} from 'antd';
+import {Button, Checkbox, Drawer, Image, Input, message, Progress, Radio, Space, Upload} from 'antd';
 import {useNavigate, useParams} from 'react-router-dom';
 import '../assets/style/blogContent.scss';
 import Comments from '../components/Comments';
@@ -19,10 +19,11 @@ let fileCount = 0;
 let firstInput = true;
 let uploaded = false;
 
-function onChange(setContent, setLoading) {
+function onChange(setContent, setLoading,setPercent) {
  return async function (info) {
   uploaded = true;
   if (firstInput) {
+   setPercent(0);
    setLoading(true);
    firstInput = false;
   }
@@ -45,12 +46,15 @@ function onChange(setContent, setLoading) {
  };
 }
 
-function upLoad(content, setContent) {
+function upLoad(content, setContent,setPercent) {
  return async function () {
   imgPathNames = await service.post('/api/blogs/images', formData, {
    headers: {
     'Content-Type': 'image/*',
-   },
+   }, onUploadProgress: (progressEvent) => {
+   const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+   setPercent(percentCompleted);
+  }
   });
   let reg = /!\[(.*?)\]\((.*?)\)/gm;
   let matcher;
@@ -117,7 +121,7 @@ export default memo(function EditBlogPage({my}) {
  navigator = useNavigate();
  let {id} = useParams();
  id = my ? my : id;
- let {refresh, setRefresh, setLoading} = store;
+ let {refresh, setRefresh,loading, setLoading} = store;
  const [content, setContent] = useState('');
  const [title, setTitle] = useState('');
  const [type, setType] = useState(1);
@@ -127,6 +131,7 @@ export default memo(function EditBlogPage({my}) {
  const [postOriginSrc, setPostOriginSrc] = useState(undefined);
  const [visible, setVisible] = useState(false);
  const [page, setPage] = useState(1);
+ const [percent, setPercent] = useState(0);
  const showDrawer = () => {
   setVisible(true);
  };
@@ -156,10 +161,22 @@ export default memo(function EditBlogPage({my}) {
      <>
       <div className={'blog-content'}>
        <Space style={{paddingBottom: '10px', textAlign: 'left'}}>
-        <Upload beforeUpload={() => false} onChange={onChange(setContent, setLoading)} directory>
+        <Progress type="circle" percent={percent} format={() => {
+         let message = '';
+         if (percent === 100) {
+          message = '压缩中...';
+         } else {
+          message = `${percent}%`;
+         }
+         if (!loading) {
+          message = '完成';
+         }
+         return message;
+        }}/>
+        <Upload beforeUpload={() => false} onChange={onChange(setContent, setLoading, setPercent)} directory>
          <Button icon={<UploadOutlined/>}>上传MarkDown文件夹</Button>
         </Upload>
-        <Button type={'primary'} onClick={upLoad(content, setContent)}>
+        <Button type={'primary'} onClick={upLoad(content, setContent, setPercent)}>
          上传图片
         </Button>
         标题：

@@ -10,7 +10,7 @@ import {
  List,
  message,
  Pagination,
- Popconfirm,
+ Popconfirm, Progress,
  Radio,
  Space,
  Table,
@@ -83,10 +83,11 @@ const columns = [
  },
 ];
 
-function onChange(setLoading) {
+function onChange(setLoading, setPercent) {
  return function (info) {
   uploaded = true;
   if (!firstInput) {
+   setPercent(0);
    setLoading(true);
    firstInput = false;
   }
@@ -100,13 +101,19 @@ function onChange(setLoading) {
  };
 }
 
-async function upLoad() {
- imgPathNames = await service.post(`/api/albums/images`, formData, {
-  headers: {
-   'Content-Type': 'image/*',
-  }
- });
- message.success('上传成功');
+function upLoad(setPercent) {
+ return async function(){
+  imgPathNames = await service.post(`/api/albums/images`, formData, {
+   headers: {
+    'Content-Type': 'image/*',
+   },
+   onUploadProgress: (progressEvent) => {
+    const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+    setPercent(percentCompleted);
+   }
+  });
+  message.success('上传成功');
+ }
 }
 
 function save(id, name, postOriginSrc) {
@@ -139,13 +146,14 @@ function save(id, name, postOriginSrc) {
 export default memo(function EditAlbumPage() {
  let {id} = useParams();
  navigator = useNavigate();
- const {refresh, setRefresh, setLoading} = store;
+ const {refresh, setRefresh,loading, setLoading} = store;
  const [name, setName] = useState('');
  const [comments, setComments] = useState([]);
  const [postOriginSrc, setPostOriginSrc] = useState(undefined);
  const [images, setImages] = useState([]);
  const [visible, setVisible] = useState(false);
  const [page, setPage] = useState(1);
+ const [percent, setPercent] = useState(0);
  let {data, loading: loadingx} = useRequest(getAlbumData(id), {
   refreshDeps: [id, refresh, refreshImages],
  });
@@ -170,10 +178,22 @@ export default memo(function EditAlbumPage() {
  return (
      <div>
       <Space>
-       <Upload beforeUpload={() => false} onChange={onChange(setLoading)} multiple={true}>
+       <Progress type="circle" percent={percent} format={() => {
+        let message = '';
+        if (percent === 100) {
+         message = '压缩中...';
+        } else {
+         message = `${percent}%`;
+        }
+        if (!loading) {
+         message = '完成';
+        }
+        return message;
+       }}/>
+       <Upload beforeUpload={() => false} onChange={onChange(setLoading,setPercent)} multiple={true}>
         <Button icon={<UploadOutlined/>}>上传照片</Button>
        </Upload>
-       <Button type={'primary'} onClick={upLoad}>
+       <Button type={'primary'} onClick={upLoad(setPercent)}>
         上传
        </Button>
        相册名称：{' '}

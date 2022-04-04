@@ -1,7 +1,21 @@
 import {memo, useEffect, useState} from 'react';
 import {useNavigate, useParams} from 'react-router-dom';
 import {useRequest} from 'ahooks';
-import {Button, Divider, Drawer, Image, Input, List, message, Popconfirm, Radio, Space, Table, Upload} from 'antd';
+import {
+ Button,
+ Divider,
+ Drawer,
+ Image,
+ Input,
+ List,
+ message,
+ Popconfirm,
+ Progress,
+ Radio,
+ Space,
+ Table,
+ Upload
+} from 'antd';
 import {UploadOutlined} from '@ant-design/icons';
 import Comments from '../components/Comments';
 import store from '../reducer/resso';
@@ -37,10 +51,11 @@ const columns = [
  }
 ];
 
-function onChange(setLoading) {
+function onChange(setLoading, setPercent) {
  return function (info) {
   uploaded = true;
   if (!firstInput) {
+   setPercent(0);
    setLoading(true);
    firstInput = false;
   }
@@ -54,13 +69,19 @@ function onChange(setLoading) {
  };
 }
 
-async function upLoad() {
- imgPathNames = await service.post(`/api/albums/images`, formData, {
-  headers: {
-   'Content-Type': 'image/*',
-  }
- });
- message.success('上传成功');
+function upLoad(setPercent) {
+ return async function () {
+  imgPathNames = await service.post(`/api/albums/images`, formData, {
+   headers: {
+    'Content-Type': 'image/*',
+   },
+   onUploadProgress: (progressEvent) => {
+    const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+    setPercent(percentCompleted);
+   }
+  });
+  message.success('上传成功');
+ };
 }
 
 function save(name, postOriginSrc) {
@@ -90,12 +111,13 @@ function save(name, postOriginSrc) {
 
 export default memo(function EditAlbumPage() {
  navigator = useNavigate();
- const {refresh, setRefresh, setLoading} = store;
+ const {refresh, setRefresh, loading, setLoading} = store;
  const [name, setName] = useState('');
  const [postOriginSrc, setPostOriginSrc] = useState(undefined);
  const [images, setImages] = useState([]);
  const [visible, setVisible] = useState(false);
  const [page, setPage] = useState(1);
+ const [percent, setPercent] = useState(0);
  const showDrawer = () => {
   setVisible(true);
  };
@@ -110,10 +132,22 @@ export default memo(function EditAlbumPage() {
  return (
      <div>
       <Space>
-       <Upload beforeUpload={() => false} onChange={onChange(setLoading)} multiple={true}>
+       <Progress type="circle" percent={percent} format={() => {
+        let message = '';
+        if (percent === 100) {
+         message = '压缩中...';
+        } else {
+         message = `${percent}%`;
+        }
+        if (!loading) {
+         message = '完成';
+        }
+        return message;
+       }}/>
+       <Upload beforeUpload={() => false} onChange={onChange(setLoading, setPercent)} multiple={true}>
         <Button icon={<UploadOutlined/>}>上传照片</Button>
        </Upload>
-       <Button type={'primary'} onClick={upLoad}>
+       <Button type={'primary'} onClick={upLoad(setPercent)}>
         上传
        </Button>
        相册名称：{' '}

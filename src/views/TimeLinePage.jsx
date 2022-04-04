@@ -44,7 +44,7 @@ export default memo(function TimeLinePage() {
         return (
             <Timeline.Item
                 key={item.id}
-                label={dayjs(parseInt(item.time)).format('YYYY-MM-DD HH:mm:ss')}
+                label={dayjs(parseInt(item.time)).format('YYYY-MM-DD')}
                 dot={
                  <>
                   <Popconfirm

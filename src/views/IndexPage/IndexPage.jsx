@@ -64,7 +64,7 @@ const IndexPage = () => {
         <div className="graph-wrapper" ref={osGraphContainer}/>
        </div>
        <div className="half">
-        <h2 className="graph-title">用户访问浏览器布</h2>
+        <h2 className="graph-title">用户访问浏览器分布</h2>
         <div className="graph-wrapper" ref={browserGraphContainer}/>
        </div>
       </div>
