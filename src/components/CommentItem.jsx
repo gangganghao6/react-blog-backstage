@@ -15,7 +15,7 @@ function confirm(data, setRefresh,type) {
     data: {ids: [data.id]}
    });
   }
-  await service.put('/info')
+  await service.put('/api/info')
   setRefresh();
   message.success('已删除');
  };

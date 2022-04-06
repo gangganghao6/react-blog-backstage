@@ -66,6 +66,9 @@ const components = {
  h1({...props}) {
   return <h1 style={{fontWeight: 700}}>{props.children}</h1>;
  },
+ li({...props}) {
+  return <li children={props.children} style={{listStyle: 'initial',marginLeft:'20px'}}/>;
+ }
 };
 
 export default memo(function ({content, setContent}) {
