@@ -50,7 +50,7 @@ function save(imageUrl, name, description, setRefresh, refresh, setFileList, set
     userDescription: description
    }
   });
-  service.put('/api/info').then()
+  service.put('/api/info').then();
   setRefresh(!refresh);
   setFileList([]);
   setVisible(true);
@@ -61,9 +61,11 @@ function save(imageUrl, name, description, setRefresh, refresh, setFileList, set
 function onChange(setSearchTitle, setSearchId) {
  return async function (e) {
   const result = await service.get(`/api/blogs/${e.target.value}`);
-  await service.put(`/blogs/view/${pre.data.data.topCardId}`, {
-   value: -1
-  });
+  if (e.target.value) {
+   await service.put(`/api/blogs/view/${e.target.value}`, {
+    value: -1
+   });
+  }
   if (result.data.data) {
    setSearchId(result.data.data.id);
    setSearchTitle(result.data.data.title);
@@ -82,7 +84,7 @@ function changeTopCard(id, color, setRefresh) {
     color
    });
    setRefresh((pre) => !pre);
-   await service.put('/api/info')
+   await service.put('/api/info');
    message.success('修改成功');
   } else {
    message.error('输入正确的ID！');
