@@ -1,6 +1,6 @@
 import {useEffect, useRef} from 'react';
 import './IndexPage.scss';
-import {getBrowserData, getDailyActivityData, getOSData, getTagData} from './data';
+import {getTotalData} from './data';
 import {generateDailyActivityChart} from './generateDailyActivityChart';
 import {generateTagChart} from './generateTagChart';
 import {generateOSChart} from './generateOsChart';
@@ -12,38 +12,32 @@ const IndexPage = () => {
  const browserGraphContainer = useRef();
  const osGraphContainer = useRef();
 
- useEffect(() => {
-  getDailyActivityData().then((data) => {
-   generateDailyActivityChart({
-    container: calenderContainer.current,
-    data,
-    height: 120,
-   }).render();
-  });
-  getTagData().then((data) => {
-   generateTagChart({
-    container: tagGraphContainer.current,
-    data,
-    height: 160,
-    width: 250,
-   }).render();
-  });
-  getOSData().then((data) => {
-   generateOSChart({
-    container: osGraphContainer.current,
-    data,
-    height: 160,
-    width: 250,
-   }).render();
-  });
-  getBrowserData().then((data) => {
-   generateBrowserChart({
-    container: browserGraphContainer.current,
-    data,
-    height: 160,
-    width: 250,
-   }).render();
-  });
+ useEffect(async () => {
+  const result = await getTotalData();
+  const {data1, data2, data3, data4} = result.data.data;
+  generateDailyActivityChart({
+   container: calenderContainer.current,
+   data: data1,
+   height: 120,
+  }).render();
+  generateTagChart({
+   container: tagGraphContainer.current,
+   data: data2,
+   height: 160,
+   width: 250,
+  }).render();
+  generateOSChart({
+   container: osGraphContainer.current,
+   data: data3,
+   height: 160,
+   width: 250,
+  }).render();
+  generateBrowserChart({
+   container: browserGraphContainer.current,
+   data: data4,
+   height: 160,
+   width: 250,
+  }).render();
  }, []);
 
  return (
