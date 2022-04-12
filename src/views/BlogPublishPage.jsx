@@ -1,22 +1,21 @@
 import {memo, useEffect, useState} from 'react';
 
-import {Button, Image, Input, Space, Upload, message, Radio, Checkbox, Drawer, Progress} from 'antd';
-import {useNavigate, useParams} from 'react-router-dom';
+import {Button, Input, Space, Upload, message, Radio, Checkbox, Progress} from 'antd';
+import {useNavigate} from 'react-router-dom';
 import '../assets/style/blogContent.scss';
 import BlogEditor from '../components/BlogEditor';
 import {UploadOutlined} from '@ant-design/icons';
-import axios from 'axios';
 import store from '../reducer/resso';
 import {service} from '../requests/request';
 import SelectPublishAlbumPost from '../components/SelectPublishAlbumPost';
 
 let formData = new FormData();
-let imgPathNames = undefined, navigator;
+let navigator;
 let uploaded = false;
 let firstInput = true;
 let fileCount = 0;
 
-function onChange(setContent, loading, setLoading,setPercent) {
+function onChange(setContent, loading, setLoading, setPercent) {
  return async function (info) {
   uploaded = true;
   if (firstInput) {
@@ -41,25 +40,31 @@ function onChange(setContent, loading, setLoading,setPercent) {
  };
 }
 
-function upLoad(content, setContent,setPercent) {
+function upLoad(content, setContent, setPercent, setImages) {
  return async function () {
-  imgPathNames = await service.post('/api/blogs/images', formData, {
-   headers: {
-    'Content-Type': 'image/*',
-   }, onUploadProgress: (progressEvent) => {
-    const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-    setPercent(percentCompleted);
-   }
-  });
+  const allImages=[];
+  for (const file of formData.entries()) {
+   const tempFormData = new FormData();
+   tempFormData.append('files', file[1], file[1].name);
+   const res = await service.post(`/api/blogs/images`, tempFormData, {
+    onUploadProgress: (progressEvent) => {
+     const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+     setPercent(percentCompleted);
+    }
+   });
+   allImages.push(res.data.data[0]);
+   setImages((prev) => [...prev, res.data.data[0]]);
+  }
+  formData = new FormData();
   let reg = /!\[(.*?)\]\((.*?)\)/gm;
   let matcher;
   let tempContent = content;
-  let imgLength = imgPathNames.data.data.length;
+  let imgLength = allImages.length;
   for (let index = 0; index < imgLength; index++) {
-   let fileName = imgPathNames.data.data[index].imageName;
+   let fileName = allImages[index].imageName;
    for (let indexy = 0; (matcher = reg.exec(content)) !== null; indexy++) {
     if (matcher[2].includes(fileName)) {
-     tempContent = tempContent.replace(matcher[0], `![img](${imgPathNames.data.data[index].originSrc})`);
+     tempContent = tempContent.replace(matcher[0], `![img](${allImages[index].originSrc})`);
     }
    }
   }
@@ -68,7 +73,7 @@ function upLoad(content, setContent,setPercent) {
  };
 }
 
-function publish(title, content, type, tag, recommend, postOriginSrc) {
+function publish(title, content, type, tag, recommend, postOriginSrc, images) {
  return async function () {
   if (title === '' || tag === '' || uploaded === false || postOriginSrc === undefined) {
    message.error('还有东西没填哦');
@@ -80,25 +85,19 @@ function publish(title, content, type, tag, recommend, postOriginSrc) {
    content: content,
    time: +new Date(),
    recommend,
-   images: imgPathNames ? imgPathNames.data.data : [],
+   images,
    comments: [],
    tag: tag,
    lastModified: +new Date(),
    postId: 1,
    view: 0,
   });
-  if (imgPathNames) {
-   for (const item of result.data.data.images) {
-    if (item.originSrc === postOriginSrc) {
-     await service.put(`/api/blogs/${result.data.data.id}`, {
-      postId: item.id
-     });
-    }
+  for (const item of result.data.data.images) {
+   if (item.originSrc === postOriginSrc) {
+    await service.put(`/api/blogs/${result.data.data.id}`, {
+     postId: item.id
+    });
    }
-  } else if (postOriginSrc) {
-   await service.put(`/api/blogs/${result.data.data.id}`, {
-    postId: postOriginSrc
-   });
   }
   await service.put('/api/info');
   message.success('发布成功');
@@ -121,6 +120,7 @@ export default memo(function () {
  const [visible, setVisible] = useState(false);
  const [page, setPage] = useState(1);
  const [percent, setPercent] = useState(0);
+ const [images, setImages] = useState([]);
  const showDrawer = () => {
   setVisible(true);
  };
@@ -128,7 +128,6 @@ export default memo(function () {
  useEffect(() => {
   return function () {
    fileCount = 0;
-   imgPathNames = undefined;
    formData = new FormData();
   };
  }, []);
@@ -151,7 +150,7 @@ export default memo(function () {
         <Upload beforeUpload={beforeUpload} onChange={onChange(setContent, loading, setLoading, setPercent)} directory>
          <Button icon={<UploadOutlined/>}>上传MarkDown文件夹</Button>
         </Upload>
-        <Button type={'primary'} onClick={upLoad(content, setContent, setPercent)}>
+        <Button type={'primary'} onClick={upLoad(content, setContent, setPercent, setImages)}>
          上传图片
         </Button>
         标题：
@@ -185,14 +184,14 @@ export default memo(function () {
          推荐
         </Checkbox>
         <Button type={'primary'} ghost onClick={showDrawer}>自定义封面</Button>
-        <SelectPublishAlbumPost postOriginSrc={postOriginSrc} imgPathNames={imgPathNames} visible={visible}
+        <SelectPublishAlbumPost postOriginSrc={postOriginSrc} images={images} visible={visible}
                                 setPostOriginSrc={setPostOriginSrc}
                                 setVisible={setVisible} page={page} setPage={setPage}/>
        </Space>
        <BlogEditor content={content} setContent={setContent}/>
        <div className={'action-container'}>
         <Space>
-         <Button type={'primary'} onClick={publish(title, content, type, tag, recommend, postOriginSrc)}>
+         <Button type={'primary'} onClick={publish(title, content, type, tag, recommend, postOriginSrc, images)}>
           发布
          </Button>
          <Button

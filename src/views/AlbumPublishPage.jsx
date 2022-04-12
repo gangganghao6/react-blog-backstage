@@ -24,8 +24,7 @@ import SelectPublishAlbumPost from '../components/SelectPublishAlbumPost';
 
 let refreshImages = false;
 let formData = new FormData();
-let imgPathNames,
-    uploaded = false,
+let uploaded = false,
     navigator;
 let fileCount = 0;
 let firstInput = true;
@@ -69,26 +68,45 @@ function onChange(setLoading, setPercent) {
  };
 }
 
-function upLoad(setPercent) {
+function upLoad(setPercent,images, setImages) {
  return async function () {
-  imgPathNames = await service.post(`/api/albums/images`, formData, {
-   headers: {
-    'Content-Type': 'image/*',
-   },
-   onUploadProgress: (progressEvent) => {
-    const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-    setPercent(percentCompleted);
-   }
-  });
+  for (const file of formData.entries()) {
+   const tempFormData = new FormData();
+   tempFormData.append('files', file[1], file[1].name);
+   const res = await service.post(`/api/albums/images`, tempFormData, {
+    onUploadProgress: (progressEvent) => {
+     const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+     setPercent(percentCompleted);
+    }
+   });
+   setImages((prev) => {
+    for (const img of prev) {
+     if (img.originSrc === res.data.data[0].originSrc) {
+      return prev;
+     }
+    }
+    return [...prev, res.data.data[0]];
+   });
+  }
+  formData = new FormData();
+  // imgPathNames = await service.post(`/api/albums/images`, formData, {
+  //  headers: {
+  //   'Content-Type': 'image/*',
+  //  },
+  //  onUploadProgress: (progressEvent) => {
+  //   const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+  //   setPercent(percentCompleted);
+  //  }
+  // });
   message.success('上传成功');
  };
 }
 
-function save(name, postOriginSrc) {
+function save(name, postOriginSrc,images) {
  return async function () {
   const result = await service.post(`/api/albums`, {
    name,
-   images: imgPathNames ? imgPathNames.data.data : [],
+   images: images,
    lastModified: +new Date(),
    time: +new Date(),
    comments: [],
@@ -111,7 +129,7 @@ function save(name, postOriginSrc) {
 
 export default memo(function EditAlbumPage() {
  navigator = useNavigate();
- const {refresh, setRefresh, loading, setLoading} = store;
+ const {loading, setLoading} = store;
  const [name, setName] = useState('');
  const [postOriginSrc, setPostOriginSrc] = useState(undefined);
  const [images, setImages] = useState([]);
@@ -121,11 +139,9 @@ export default memo(function EditAlbumPage() {
  const showDrawer = () => {
   setVisible(true);
  };
-
  useEffect(() => {
   return function () {
    fileCount = 0;
-   imgPathNames = undefined;
    formData = new FormData();
   };
  }, []);
@@ -147,7 +163,7 @@ export default memo(function EditAlbumPage() {
        <Upload beforeUpload={() => false} onChange={onChange(setLoading, setPercent)} multiple={true}>
         <Button icon={<UploadOutlined/>}>上传照片</Button>
        </Upload>
-       <Button type={'primary'} onClick={upLoad(setPercent)}>
+       <Button type={'primary'} onClick={upLoad(setPercent,images, setImages)}>
         上传
        </Button>
        相册名称：{' '}
@@ -158,7 +174,7 @@ export default memo(function EditAlbumPage() {
            }}
        />
        <Button type={'primary'} ghost onClick={showDrawer}>自定义封面</Button>
-       <SelectPublishAlbumPost postOriginSrc={postOriginSrc} imgPathNames={imgPathNames} visible={visible}
+       <SelectPublishAlbumPost postOriginSrc={postOriginSrc} images={images} visible={visible}
                                setPostOriginSrc={setPostOriginSrc}
                                setVisible={setVisible} page={page} setPage={setPage}/>
       </Space>
@@ -168,7 +184,7 @@ export default memo(function EditAlbumPage() {
           pagination={{pageSize: 20}}
       />
       <Space>
-       <Button type={'primary'} onClick={save(name, postOriginSrc)}>
+       <Button type={'primary'} onClick={save(name, postOriginSrc,images)}>
         保存
        </Button>
        <Button

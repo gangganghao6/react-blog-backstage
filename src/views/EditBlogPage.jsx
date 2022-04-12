@@ -1,25 +1,23 @@
 import {memo, useEffect, useState} from 'react';
 
-import {Button, Checkbox, Drawer, Image, Input, message, Progress, Radio, Space, Upload} from 'antd';
+import {Button, Checkbox, Input, message, Progress, Radio, Space, Upload} from 'antd';
 import {useNavigate, useParams} from 'react-router-dom';
 import '../assets/style/blogContent.scss';
 import Comments from '../components/Comments';
 import BlogEditor from '../components/BlogEditor';
 import {useRequest} from 'ahooks';
-import axios from 'axios';
-import dayjs from 'dayjs';
 import store from '../reducer/resso';
 import {UploadOutlined} from '@ant-design/icons';
 import {service} from '../requests/request';
 import SelectEditBlogPost from '../components/SelectEditBlogPost';
 
 let formData = new FormData();
-let imgPathNames, navigator;
+let navigator;
 let fileCount = 0;
 let firstInput = true;
 let uploaded = false;
 
-function onChange(setContent, setLoading,setPercent) {
+function onChange(setContent, setLoading, setPercent) {
  return async function (info) {
   uploaded = true;
   if (firstInput) {
@@ -46,25 +44,32 @@ function onChange(setContent, setLoading,setPercent) {
  };
 }
 
-function upLoad(content, setContent,setPercent) {
+function upLoad(content, setContent, setPercent, setImages) {
  return async function () {
-  imgPathNames = await service.post('/api/blogs/images', formData, {
-   headers: {
-    'Content-Type': 'image/*',
-   }, onUploadProgress: (progressEvent) => {
-   const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-   setPercent(percentCompleted);
+  setImages([]);
+  const allImages = [];
+  for (const file of formData.entries()) {
+   const tempFormData = new FormData();
+   tempFormData.append('files', file[1], file[1].name);
+   const res = await service.post(`/api/blogs/images`, tempFormData, {
+    onUploadProgress: (progressEvent) => {
+     const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+     setPercent(percentCompleted);
+    }
+   });
+   allImages.push(res.data.data[0]);
+   setImages((prev) => [...prev, res.data.data[0]]);
   }
-  });
+  formData = new FormData();
   let reg = /!\[(.*?)\]\((.*?)\)/gm;
   let matcher;
   let tempContent = content;
-  let imgLength = imgPathNames.data.data.length;
+  let imgLength = allImages.length;
   for (let index = 0; index < imgLength; index++) {
-   let fileName = imgPathNames.data.data[index].imageName;
+   let fileName = allImages[index].imageName;
    for (let indexy = 0; (matcher = reg.exec(content)) !== null; indexy++) {
     if (matcher[2].includes(fileName)) {
-     tempContent = tempContent.replace(matcher[0], `![img](${imgPathNames.data.data[index].originSrc})`);
+     tempContent = tempContent.replace(matcher[0], `![img](${allImages[index].originSrc})`);
     }
    }
   }
@@ -80,9 +85,9 @@ function getBlogDetail(id) {
  };
 }
 
-function save(id, title, content, tag, type, recommend, postOriginSrc) {
+function save(id, title, content, tag, type, recommend, postOriginSrc,images) {
  return async function () {
-  if (imgPathNames) {
+  if (images.length > 0) {
    await service.delete(`/api/blogs/images/${id}`);
   }
   const result = await service.put(`/api/blogs/${id}`, {
@@ -92,20 +97,14 @@ function save(id, title, content, tag, type, recommend, postOriginSrc) {
    type,
    lastModified: +new Date(),
    recommend,
-   images: imgPathNames ? imgPathNames.data.data : [],
+   images,
   });
-  if (imgPathNames) {
-   for (const item of result.data.data.images) {
-    if (item.originSrc === postOriginSrc) {
-     await service.put(`/api/blogs/${result.data.data.id}`, {
-      postId: item.id
-     });
-    }
+  for (const item of result.data.data.images) {
+   if (item.originSrc === postOriginSrc) {
+    await service.put(`/api/blogs/${result.data.data.id}`, {
+     postId: item.id
+    });
    }
-  } else if (postOriginSrc) {
-   await service.put(`/api/blogs/${result.data.data.id}`, {
-    postId: postOriginSrc
-   });
   }
   await service.put('/api/info');
   message.success('保存成功');
@@ -121,7 +120,7 @@ export default memo(function EditBlogPage({my}) {
  navigator = useNavigate();
  let {id} = useParams();
  id = my ? my : id;
- let {refresh, setRefresh,loading, setLoading} = store;
+ let {refresh, setRefresh, loading, setLoading} = store;
  const [content, setContent] = useState('');
  const [title, setTitle] = useState('');
  const [type, setType] = useState(1);
@@ -132,6 +131,7 @@ export default memo(function EditBlogPage({my}) {
  const [visible, setVisible] = useState(false);
  const [page, setPage] = useState(1);
  const [percent, setPercent] = useState(0);
+ const [images, setImages] = useState([]);
  const showDrawer = () => {
   setVisible(true);
  };
@@ -146,15 +146,15 @@ export default memo(function EditBlogPage({my}) {
    setTag(data.data.data.tag);
    setRecommend(data.data.data.recommend);
    setComments(data.data.data.comments);
-   setPostOriginSrc(data.data.data.postId)
+   setPostOriginSrc(data.data.data.postId);
+   setImages(data.data.data.images);
   }
  }, [loadingx]);
  useEffect(() => {
   return function () {
    fileCount = 0;
-   imgPathNames = undefined;
    formData = new FormData();
-  }
+  };
  }, []);
 
  return (
@@ -176,7 +176,7 @@ export default memo(function EditBlogPage({my}) {
         <Upload beforeUpload={() => false} onChange={onChange(setContent, setLoading, setPercent)} directory>
          <Button icon={<UploadOutlined/>}>上传MarkDown文件夹</Button>
         </Upload>
-        <Button type={'primary'} onClick={upLoad(content, setContent, setPercent)}>
+        <Button type={'primary'} onClick={upLoad(content, setContent, setPercent,setImages)}>
          上传图片
         </Button>
         标题：
@@ -212,24 +212,24 @@ export default memo(function EditBlogPage({my}) {
          推荐
         </Checkbox>
         <Button type={'primary'} ghost onClick={showDrawer}>自定义封面</Button>
-        <SelectEditBlogPost postOriginSrc={postOriginSrc} imgPathNames={imgPathNames} visible={visible}
-                            setPostOriginSrc={setPostOriginSrc} data={data}
+        <SelectEditBlogPost postOriginSrc={postOriginSrc} images={images} visible={visible}
+                            setPostOriginSrc={setPostOriginSrc}
                             setVisible={setVisible} page={page} setPage={setPage}/>
        </Space>
        <BlogEditor content={content} setContent={setContent}/>
        <div className={'action-container'}>
-       <Space>
-        <Button
-            type={'primary'}
-            onClick={save(id, title, content, tag, type, recommend, postOriginSrc)}
-        >
-         保存更改
-        </Button>
-        <Button type={'primary'} onClick={cancel}>
-         取消
-        </Button>
-       </Space>
-      </div>
+        <Space>
+         <Button
+             type={'primary'}
+             onClick={save(id, title, content, tag, type, recommend, postOriginSrc,images)}
+         >
+          保存更改
+         </Button>
+         <Button type={'primary'} onClick={cancel}>
+          取消
+         </Button>
+        </Space>
+       </div>
        <Comments
            comments={comments}
            setRefresh={setRefresh}

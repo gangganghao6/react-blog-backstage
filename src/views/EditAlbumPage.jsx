@@ -3,15 +3,10 @@ import {useNavigate, useParams} from 'react-router-dom';
 import {useRequest} from 'ahooks';
 import {
  Button,
- Divider,
- Drawer,
  Image,
  Input,
- List,
  message,
- Pagination,
  Popconfirm, Progress,
- Radio,
  Space,
  Table,
  Upload
@@ -24,8 +19,7 @@ import SelectEditAlbumPost from '../components/SelectEditAlbumPost';
 
 let refreshImages = false;
 let formData = new FormData();
-let imgPathNames,
-    uploaded = false,
+let uploaded = false,
     navigator;
 let fileCount = 0;
 let firstInput = true;
@@ -37,12 +31,12 @@ function getAlbumData(id) {
 }
 
 function deleteImage(id) {
- return function () {
-  service.delete('/api/albums/images', {
+ return async function () {
+  await service.delete('/api/albums/images', {
    data: {ids: [id]}
   });
   refreshImages = !refreshImages;
-  service.put('/api/info')
+  await service.put('/api/info');
   message.success('删除成功');
  };
 }
@@ -69,7 +63,8 @@ const columns = [
  {
   title: '操作',
   render: (e, item) => {
-   return (<Popconfirm
+   const isNew = item?.isNew;
+   return (isNew ? <>待上传</> : <Popconfirm
        title="确认删除这张照片吗？"
        onConfirm={deleteImage(item.id)}
        okText="确认"
@@ -101,40 +96,46 @@ function onChange(setLoading, setPercent) {
  };
 }
 
-function upLoad(setPercent) {
- return async function(){
-  imgPathNames = await service.post(`/api/albums/images`, formData, {
-   headers: {
-    'Content-Type': 'image/*',
-   },
-   onUploadProgress: (progressEvent) => {
-    const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-    setPercent(percentCompleted);
-   }
-  });
+function upLoad(setPercent, images, setImages) {
+ return async function () {
+  for (const file of formData.entries()) {
+   const tempFormData = new FormData();
+   tempFormData.append('files', file[1], file[1].name);
+   const res = await service.post(`/api/albums/images`, tempFormData, {
+    onUploadProgress: (progressEvent) => {
+     const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+     setPercent(percentCompleted);
+    }
+   });
+   setImages((prev) => {
+    for (const img of prev) {
+     if (img.originSrc === res.data.data[0].originSrc) {
+      return prev;
+     }
+    }
+    res.data.data[0].isNew = true;
+    return [...prev, res.data.data[0]];
+   });
+  }
+  formData = new FormData();
   message.success('上传成功');
- }
+ };
 }
 
-function save(id, name, postOriginSrc) {
+function save(id, name, postOriginSrc, images) {
  return async function () {
   const result = await service.put(`/api/albums/${id}`, {
    name,
-   images: imgPathNames ? imgPathNames.data.data : [],
+   images,
    lastModified: +new Date(),
   });
-  if (imgPathNames) {
-   for (const item of result.data.data.images) {
-    if (item.originSrc === postOriginSrc) {
-     await service.put(`/api/albums/${result.data.data.id}`, {
-      postId: item.id
-     });
-    }
+  for (const item of result.data.data.images) {
+   if (item.originSrc === postOriginSrc) {
+    await service.put(`/api/albums/${result.data.data.id}`, {
+     postId: item.id
+    });
+    break;
    }
-  } else if (postOriginSrc) {
-   await service.put(`/api/albums/${result.data.data.id}`, {
-    postId: postOriginSrc
-   });
   }
   await service.put('/api/info');
   message.success('保存成功');
@@ -146,7 +147,7 @@ function save(id, name, postOriginSrc) {
 export default memo(function EditAlbumPage() {
  let {id} = useParams();
  navigator = useNavigate();
- const {refresh, setRefresh,loading, setLoading} = store;
+ const {refresh, setRefresh, loading, setLoading} = store;
  const [name, setName] = useState('');
  const [comments, setComments] = useState([]);
  const [postOriginSrc, setPostOriginSrc] = useState(undefined);
@@ -172,7 +173,6 @@ export default memo(function EditAlbumPage() {
  useEffect(() => {
   return function () {
    fileCount = 0;
-   imgPathNames = undefined;
   };
  }, []);
  return (
@@ -190,10 +190,10 @@ export default memo(function EditAlbumPage() {
         }
         return message;
        }}/>
-       <Upload beforeUpload={() => false} onChange={onChange(setLoading,setPercent)} multiple={true}>
+       <Upload beforeUpload={() => false} onChange={onChange(setLoading, setPercent)} multiple={true}>
         <Button icon={<UploadOutlined/>}>上传照片</Button>
        </Upload>
-       <Button type={'primary'} onClick={upLoad(setPercent)}>
+       <Button type={'primary'} onClick={upLoad(setPercent, images, setImages)}>
         上传
        </Button>
        相册名称：{' '}
@@ -204,9 +204,9 @@ export default memo(function EditAlbumPage() {
            }}
        />
        <Button type={'primary'} ghost onClick={showDrawer}>自定义封面</Button>
-       <SelectEditAlbumPost postOriginSrc={postOriginSrc} imgPathNames={imgPathNames} visible={visible}
-                   setPostOriginSrc={setPostOriginSrc} data={data}
-                   setVisible={setVisible} page={page} setPage={setPage}/>
+       <SelectEditAlbumPost postOriginSrc={postOriginSrc} images={images} visible={visible}
+                            setPostOriginSrc={setPostOriginSrc}
+                            setVisible={setVisible} page={page} setPage={setPage}/>
       </Space>
       <Table
           columns={columns}
@@ -214,7 +214,7 @@ export default memo(function EditAlbumPage() {
           pagination={{pageSize: 20}}
       />
       <Space>
-       <Button type={'primary'} onClick={save(id, name, postOriginSrc)}>
+       <Button type={'primary'} onClick={save(id, name, postOriginSrc, images)}>
         保存
        </Button>
        <Button

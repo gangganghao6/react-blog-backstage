@@ -1,5 +1,5 @@
 import {memo, useState} from 'react';
-import {Button, DatePicker, message, Popconfirm, Timeline} from 'antd';
+import {Button, DatePicker, message, Pagination, Popconfirm, Space, Timeline} from 'antd';
 import {ClockCircleOutlined, DeleteOutlined} from '@ant-design/icons';
 import dayjs from 'dayjs';
 import {useRequest} from 'ahooks';
@@ -8,19 +8,14 @@ import Search from 'antd/es/input/Search';
 import {service} from '../requests/request';
 
 function getTimeLine() {
- return service.get('/api/info/timelines', {
-  params: {
-   _sort: 'time',
-   _order: 'desc',
-  },
- });
+ return service.get('/api/info/timelines');
 }
 
 function onSearch(refresh, setRefresh, time) {
  return async function (content) {
   time = isNaN(time) ? +new Date() : time;
   await axios.post('/api/info/timelines', {
-   timeline:{
+   timeline: {
     time: time,
     text: content,
    }
@@ -34,13 +29,14 @@ function onSearch(refresh, setRefresh, time) {
 export default memo(function TimeLinePage() {
  const [refresh, setRefresh] = useState(false);
  const [time, setTime] = useState(+new Date());
+ const [page, setPage] = useState(1);
  let {data} = useRequest(getTimeLine, {
   refreshDeps: [refresh],
  });
  return (
      <>
       <Timeline mode="alternate" className={'timeline'}>
-       {data ? data.data.data.map((item) => {
+       {data ? data.data.data.slice((page - 1) * 20, page * 20).map((item) => {
         return (
             <Timeline.Item
                 key={item.id}
@@ -51,7 +47,7 @@ export default memo(function TimeLinePage() {
                       title="确认是否删除这个事件?"
                       onConfirm={() => {
                        service.delete(`/api/info/timelines/${item.id}`);
-                       service.put('/info')
+                       service.put('/info');
                        message.success('已删除');
                        setRefresh(!refresh);
                       }}
@@ -67,7 +63,11 @@ export default memo(function TimeLinePage() {
             </Timeline.Item>
         );
        }) : ''}
+       <Pagination pageSize={20}
+                   total={data ? data.data.data.length : 0}
+                   onChange={setPage} current={page}/>
       </Timeline>
+      <br/>
       自定义日期：
       <DatePicker
           size="large"
