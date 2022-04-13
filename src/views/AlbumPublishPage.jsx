@@ -1,33 +1,21 @@
-import {memo, useEffect, useState} from 'react';
-import {useNavigate, useParams} from 'react-router-dom';
-import {useRequest} from 'ahooks';
+import {memo, useState} from 'react';
+import {useNavigate} from 'react-router-dom';
 import {
  Button,
- Divider,
- Drawer,
  Image,
  Input,
- List,
  message,
- Popconfirm,
  Progress,
- Radio,
  Space,
  Table,
  Upload
 } from 'antd';
 import {UploadOutlined} from '@ant-design/icons';
-import Comments from '../components/Comments';
 import store from '../reducer/resso';
 import {service} from '../requests/request';
 import SelectPublishAlbumPost from '../components/SelectPublishAlbumPost';
-
-let refreshImages = false;
-let formData = new FormData();
-let uploaded = false,
-    navigator;
-let fileCount = 0;
-let firstInput = true;
+import {onChange, upLoad} from '../utils/albums';
+let navigator;
 
 const columns = [
  {
@@ -50,60 +38,14 @@ const columns = [
  }
 ];
 
-function onChange(setLoading, setPercent) {
- return function (info) {
-  uploaded = true;
-  if (!firstInput) {
-   setPercent(0);
-   setLoading(true);
-   firstInput = false;
-  }
-  formData.append('files', info.file, info.file.name);
-  fileCount++;
-  if (fileCount === info.fileList.length - 1) {
-   setLoading(false);
-   firstInput = true;
-   message.success('处理完成...');
-  }
- };
-}
 
-function upLoad(setPercent,images, setImages) {
- return async function () {
-  for (const file of formData.entries()) {
-   const tempFormData = new FormData();
-   tempFormData.append('files', file[1], file[1].name);
-   const res = await service.post(`/api/albums/images`, tempFormData, {
-    onUploadProgress: (progressEvent) => {
-     const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-     setPercent(percentCompleted);
-    }
-   });
-   setImages((prev) => {
-    for (const img of prev) {
-     if (img.originSrc === res.data.data[0].originSrc) {
-      return prev;
-     }
-    }
-    return [...prev, res.data.data[0]];
-   });
-  }
-  formData = new FormData();
-  // imgPathNames = await service.post(`/api/albums/images`, formData, {
-  //  headers: {
-  //   'Content-Type': 'image/*',
-  //  },
-  //  onUploadProgress: (progressEvent) => {
-  //   const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-  //   setPercent(percentCompleted);
-  //  }
-  // });
-  message.success('上传成功');
- };
-}
 
-function save(name, postOriginSrc,images) {
+function save(name, postOriginSrc, images) {
  return async function () {
+  if(images.length=== 0) {
+   message.error('请先上传图片');
+   return;
+  }
   const result = await service.post(`/api/albums`, {
    name,
    images: images,
@@ -136,34 +78,28 @@ export default memo(function EditAlbumPage() {
  const [visible, setVisible] = useState(false);
  const [page, setPage] = useState(1);
  const [percent, setPercent] = useState(0);
+ const [uploadList, setUploadList] = useState([]);
  const showDrawer = () => {
   setVisible(true);
  };
- useEffect(() => {
-  return function () {
-   fileCount = 0;
-   formData = new FormData();
-  };
- }, []);
+
  return (
      <div>
       <Space>
        <Progress type="circle" percent={percent} format={() => {
-        let message = '';
-        if (percent === 100) {
-         message = '压缩中...';
-        } else {
-         message = `${percent}%`;
-        }
+        let message = `${percent}%`;
         if (!loading) {
          message = '完成';
         }
         return message;
        }}/>
-       <Upload beforeUpload={() => false} onChange={onChange(setLoading, setPercent)} multiple={true}>
-        <Button icon={<UploadOutlined/>}>上传照片</Button>
+       <Upload beforeUpload={() => false} onChange={onChange(setUploadList)} multiple={true}
+               showUploadList={{
+                showRemoveIcon: false
+               }} accept={'image/*'} fileList={uploadList}>
+        <Button icon={<UploadOutlined/>}>选择照片</Button>
        </Upload>
-       <Button type={'primary'} onClick={upLoad(setPercent,images, setImages)}>
+       <Button type={'primary'} onClick={upLoad(setPercent, setImages, uploadList, setUploadList)}>
         上传
        </Button>
        相册名称：{' '}
@@ -184,7 +120,7 @@ export default memo(function EditAlbumPage() {
           pagination={{pageSize: 20}}
       />
       <Space>
-       <Button type={'primary'} onClick={save(name, postOriginSrc,images)}>
+       <Button type={'primary'} onClick={save(name, postOriginSrc, images)}>
         保存
        </Button>
        <Button
