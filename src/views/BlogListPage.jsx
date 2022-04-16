@@ -1,11 +1,9 @@
 import {memo, useEffect, useState} from 'react';
 import {Button, DatePicker, message, Popconfirm, Select, Space, Table} from 'antd';
 import dayjs from 'dayjs';
-import {NavLink} from 'react-router-dom';
+import {NavLink, useNavigate} from 'react-router-dom';
 import Search from 'antd/es/input/Search';
-import {useNavigate} from 'react-router-dom';
 import {useRequest} from 'ahooks';
-import axios from 'axios';
 import store from '../reducer/resso';
 import {useImmer} from 'use-immer';
 import {service} from '../requests/request';
@@ -136,7 +134,6 @@ function getDataList(id, title, time, type, setLoading) {
 
 export default memo(function BlogList() {
  ({refresh, setRefresh} = store);
- // const [page, setPage] = useState(1)
  const [id, setId] = useState(undefined);
  const [title, setTitle] = useState(undefined);
  const [time, setTime] = useImmer({});

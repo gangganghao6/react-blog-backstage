@@ -12,32 +12,33 @@ const IndexPage = () => {
  const browserGraphContainer = useRef();
  const osGraphContainer = useRef();
 
- useEffect(async () => {
-  const result = await getTotalData();
-  const {data1, data2, data3, data4} = result.data.data;
-  generateDailyActivityChart({
-   container: calenderContainer.current,
-   data: data1,
-   height: 120,
-  }).render();
-  generateTagChart({
-   container: tagGraphContainer.current,
-   data: data2,
-   height: 160,
-   width: 250,
-  }).render();
-  generateOSChart({
-   container: osGraphContainer.current,
-   data: data3,
-   height: 160,
-   width: 250,
-  }).render();
-  generateBrowserChart({
-   container: browserGraphContainer.current,
-   data: data4,
-   height: 160,
-   width: 250,
-  }).render();
+ useEffect(() => {
+  getTotalData().then((result) => {
+   const {data1, data2, data3, data4} = result.data.data;
+   generateDailyActivityChart({
+    container: calenderContainer.current,
+    data: data1,
+    height: 120,
+   }).render();
+   generateTagChart({
+    container: tagGraphContainer.current,
+    data: data2,
+    height: 160,
+    width: 250,
+   }).render();
+   generateOSChart({
+    container: osGraphContainer.current,
+    data: data3,
+    height: 160,
+    width: 250,
+   }).render();
+   generateBrowserChart({
+    container: browserGraphContainer.current,
+    data: data4,
+    height: 160,
+    width: 250,
+   }).render();
+  });
  }, []);
 
  return (
