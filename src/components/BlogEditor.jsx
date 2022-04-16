@@ -32,8 +32,6 @@ import '../assets/style/blogEditor.scss';
 import TextArea from 'antd/es/input/TextArea';
 
 SyntaxHighlighter.registerLanguage('jsx', jsx);
-SyntaxHighlighter.registerLanguage('html', jsx);
-SyntaxHighlighter.registerLanguage('js', js);
 SyntaxHighlighter.registerLanguage('javascript', js);
 SyntaxHighlighter.registerLanguage('json', json);
 SyntaxHighlighter.registerLanguage('markdown', markdown);
@@ -55,7 +53,6 @@ SyntaxHighlighter.registerLanguage('scss', scss);
 SyntaxHighlighter.registerLanguage('sql', sql);
 SyntaxHighlighter.registerLanguage('tsx', tsx);
 SyntaxHighlighter.registerLanguage('typescript', typescript);
-SyntaxHighlighter.registerLanguage('ts', typescript);
 SyntaxHighlighter.registerLanguage('wasm', wasm);
 
 const components = {
@@ -90,8 +87,9 @@ const components = {
       <div style={{overflow: 'hidden'}}>
        <Image
            style={{
-            width: '100%',
-            height: '100%',
+            // width: '100%',
+            // height: '100%',
+            zoom: props.alt,
             objectFit: 'cover',
            }}
            src={all}
