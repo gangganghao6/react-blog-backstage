@@ -32,6 +32,7 @@ import '../assets/style/blogEditor.scss';
 import TextArea from 'antd/es/input/TextArea';
 
 SyntaxHighlighter.registerLanguage('jsx', jsx);
+SyntaxHighlighter.registerLanguage('html', jsx);
 SyntaxHighlighter.registerLanguage('js', js);
 SyntaxHighlighter.registerLanguage('javascript', js);
 SyntaxHighlighter.registerLanguage('json', json);
@@ -59,8 +60,7 @@ SyntaxHighlighter.registerLanguage('wasm', wasm);
 
 const components = {
  code({node, inline, className, children, ...props}) {
-  let match = /language-(\w+)/.exec(className || '');
-  match = match === null ? ['x', 'js'] : match;
+  const match = /language-(\w+)/.exec(className || 'language-jsx');
   return (
       <SyntaxHighlighter
           style={atomOneDark}
