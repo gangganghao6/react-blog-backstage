@@ -116,19 +116,14 @@ function publish() {
  };
 }
 
-function getDataList(id, title, time, type, setLoading) {
+function getDataList(id, title, time, type, setLoading, page) {
  return function () {
-  // setLoading(true);
-  let config = {};
-  // if (type === "id" && id !== "") {
-  //   config.id = id;
-  // } else if (type === "title" && title !== "") {
-  //   config["title_like"] = title;
-  // } else if (type === "time") {
-  //   config["time_gte"] = time.pre;
-  //   config["time_lte"] = time.aft;
-  // }
-  return service.get('/api/blogs', {params: config});
+  return service.get('/api/blogs', {
+   params: {
+    pageNum: page,
+    pageSize: 10,
+   }
+  });
  };
 }
 
@@ -139,6 +134,7 @@ export default memo(function BlogList() {
  const [time, setTime] = useImmer({});
  const [type, setType] = useState('id');
  const [loading, setLoading] = useState(true);
+ const [page, setPage] = useState(1);
  let total = 0;
  navigator = useNavigate();
  const selectBefore = (
@@ -148,8 +144,8 @@ export default memo(function BlogList() {
       <Option value="time">时间</Option>
      </Select>
  );
- let {data} = useRequest(getDataList(id, title, time, type, setLoading), {
-  refreshDeps: [refresh, id, title, time, type],
+ let {data} = useRequest(getDataList(id, title, time, type, setLoading, page), {
+  refreshDeps: [refresh, id, title, time, type, page],
  });
  if (data) {
   total = data.data.data.count;
@@ -179,7 +175,8 @@ export default memo(function BlogList() {
           onSearch={onSearch(setId, setTitle, type)}
       />
       <DatePicker onChange={onChangeTime(setTime, setType)} picker="month"/>
-      <Table columns={columns} dataSource={data} onChange={onChangeTable} pagination={{total}} loading={loading}/>
+      <Table columns={columns} dataSource={data} onChange={onChangeTable}
+             pagination={{total, current: page, onChange: setPage, pageSize: 10}} loading={loading}/>
      </>
  );
 });
