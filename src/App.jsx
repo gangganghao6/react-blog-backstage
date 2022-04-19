@@ -56,13 +56,13 @@ function App() {
        <Layout className="site-layout">
         <Header className="site-layout-background" style={{padding: 0}}/>
         <Content className={'content-container'}>
-         <div className="site-layout-background" style={{padding: 24, textAlign: 'center'}}>
+         <div className="site-layout-background" style={{padding: 5, textAlign: 'center'}}>
           <AllRoutes/>
          </div>
         </Content>
         <Footer
-            style={{textAlign: 'center', position: 'relative', bottom: '0', width: 'calc(100vw - 200px)', right: '0'}}>Ant
-         Design ©2018 Created
+            style={{textAlign: 'center', position: 'relative', bottom: '0', width: '100%', right: '0'}}>Ant
+         Design ©2022 Created
          by Ant
          UED</Footer>
        </Layout>

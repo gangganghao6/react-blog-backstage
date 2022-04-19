@@ -1,14 +1,14 @@
-import axios from "axios";
-import store from "../reducer/resso";
-import { message } from "antd";
+import axios from 'axios';
+import store from '../reducer/resso';
+
 export const service = axios.create({});
 
 service.interceptors.request.use(
-  (config) => {
-    const { setLoading } = store;
-    setLoading(true);
-    config.headers = {
-      Accept: "*/*",
+    (config) => {
+     const {setLoading} = store;
+     setLoading(true);
+     config.headers = {
+      Accept: '*/*',
       // "Content-Type": "application/json",
     };
     return config;

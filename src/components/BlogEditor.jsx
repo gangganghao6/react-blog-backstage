@@ -84,20 +84,22 @@ const components = {
   splits[splits.length - 1] = `gzip_${splits[splits.length - 1]}.webp`;
   let all = splits.join('/');
   return (
-      <div style={{overflow: 'hidden'}}>
-       <Image
-           style={{
-            // width: '100%',
-            // height: '100%',
-            zoom: props.alt,
-            objectFit: 'cover',
-           }}
-           src={all}
-           alt={props.alt}
-           preview={{
-            src: props.src,
-           }}
-       />
+      <div style={{
+       textAlign: 'center',
+      }}>
+       <div style={{
+        display: 'inline-block',
+        height: props.alt,
+        width: props.alt,
+       }}>
+        <Image
+            src={all}
+            alt={props.alt}
+            preview={{
+             src: props.src,
+            }}
+        />
+       </div>
       </div>
   );
  },
@@ -105,7 +107,7 @@ const components = {
   return <h1 style={{fontWeight: 700}}>{props.children}</h1>;
  },
  li({...props}) {
-  return <li children={props.children} style={{listStyle: 'initial',marginLeft:'20px'}}/>;
+  return <li children={props.children} style={{listStyle: 'initial', marginLeft: '20px'}}/>;
  }
 };
 
@@ -118,6 +120,7 @@ export default memo(function ({content, setContent}) {
  function editMd(e) {
   setContent(e.target.value);
  }
+
  return (
      <>
       <div className={'edit-container'}>
