@@ -16,8 +16,7 @@ body {
   -moz-osx-font-smoothing: grayscale;
   -webkit-overflow-scrolling: touch;
   width: 100%;
-  height: 100%;
-}
+  height: 100%; }
 
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace; }
@@ -30,8 +29,7 @@ body {
   background-color: #cbc5c8;
   min-height: 100vh;
   position: absolute;
-  width: 100%;
-}
+  width: 100%; }
 
 /* 内外边距通常让各个浏览器样式的表现位置不同 */
 body,

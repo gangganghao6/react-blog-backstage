@@ -19,6 +19,7 @@
     "dayjs": "^1.10.8",
     "immer": "^9.0.12",
     "less": "^4.1.2",
+    "metamask-react": "^2.6.0",
     "nprogress": "^0.2.0",
     "postcss-pxtorem": "^6.0.0",
     "rc-footer": "^0.6.6",
@@ -31,8 +32,9 @@
     "remark-gfm": "^3.0.1",
     "resso": "^0.2.2",
     "sass": "^1.49.7",
-    "use-immer": "^0.6.0",
-    "vite-plugin-compression": "^0.5.1"
+    "use-immer": "^0.8.1",
+    "vite-plugin-compression": "^0.5.1",
+    "web3": "^1.8.2"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^1.0.7",
