@@ -12,6 +12,13 @@ export async function initMetaMask({
     switch (status) {
         case "unavailable":
             message.error("尚未安装 MetaMask")
+            const UA = window.navigator.userAgent.toLowerCase()
+            if (UA.includes('edg')) {
+                window.open("https://microsoftedge.microsoft.com/addons/detail/metamask/ejbalbakoplchlghecdalmeeeajnimhm", "_blank")
+            } else {
+                window.open("https://chrome.google.com/webstore/detail/metamask/nkbihfbeogaeaoehlefnkodbefgpgknn?hl=zh-CN", "_blank")
+
+            }
             break;
         case "notConnected":
             message.info("正在连接到 MetaMask")
@@ -27,6 +34,8 @@ export async function initMetaMask({
                 await switchToGoerli({switchChain})
             }
             const web3 = new Web3(ethereum)
+            web3.eth.transactionBlockTimeout = 1000
+            web3.eth.transactionPollingTimeout = 1000
             const nodeVersion = await web3.eth.getNodeInfo()
             const balance = await getBalance({account}, web3)()
             setNodeVersion(nodeVersion)
@@ -55,10 +64,14 @@ export function getBalance({account}, web3) {
     }
 }
 
-export function startTransfer({account, chainId}, web3, value, address, unit, setIsModalOpen, setTransactionAddress) {
+export function startTransfer({
+                                  account,
+                                  chainId
+                              }, web3, value, address, unit, setIsModalOpen, setTransactionAddress,
+                              setTransactionResult, setTransactionIsPending) {
     return async () => {
         try {
-            const gasPrice = await web3.eth.getGasPrice();
+            const gasPrice = Number.parseInt(await web3.eth.getGasPrice()) + 10 ** 10;
             const balance = await web3.eth.getBalance(account);
             const gas = 21000;
             if (unit === "WEI" && (!Number.isInteger(value) || value <= 0)) {
@@ -96,11 +109,17 @@ export function startTransfer({account, chainId}, web3, value, address, unit, se
                     } else {
                         setTransactionAddress(transactionAddress);
                         setIsModalOpen(true);
-                        message.success("已发起交易");
+                        setTransactionIsPending(true);
+                        message.success("已发起交易，请耐心等待交易被确认，不要关闭弹窗");
                     }
                 }).then((res) => {
-                    console.log(res)
+                    setTransactionResult(res);
+                    setTransactionIsPending(false);
                     message.success("交易成功");
+                }).catch((e) => {
+                    // setTransactionResult(e);
+                    setTransactionIsPending(false);
+                    message.error(e.message);
                 });
             } else {
                 message.error("输入错误");
