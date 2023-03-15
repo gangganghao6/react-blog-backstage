@@ -19,7 +19,8 @@ export default memo(function MetaMaskModal({
         to,
         transactionHash,
         transactionIndex,
-        type
+        type,
+        timeStamp
     } = transactionResult || {
         blockHash: '',
         blockNumber: '',
@@ -31,7 +32,8 @@ export default memo(function MetaMaskModal({
         to: '',
         transactionHash: '',
         transactionIndex: '',
-        type: ''
+        type: '',
+        timeStamp: ''
     };
     const handleOk = () => {
         window.open('https://goerli.etherscan.io/tx/' + transactionAddress, '_blank')
@@ -40,7 +42,6 @@ export default memo(function MetaMaskModal({
     const handleCancel = () => {
         setIsModalOpen(false);
     };
-    console.log(transactionResult)
     const Result = <>
         <Descriptions title="Transaction Info" bordered>
             <Descriptions.Item label="Block Hash" span={3}>{blockHash}</Descriptions.Item>
@@ -54,7 +55,7 @@ export default memo(function MetaMaskModal({
             <Descriptions.Item label="Gas Used">{gasUsed}</Descriptions.Item>
             <Descriptions.Item label="From" span={3}>{from}</Descriptions.Item>
             <Descriptions.Item label="To" span={3}>{to}</Descriptions.Item>
-
+            <Descriptions.Item label="Time" span={3}>{timeStamp}</Descriptions.Item>
         </Descriptions>
     </>
     return (

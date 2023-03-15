@@ -1,5 +1,6 @@
 import Web3 from "web3";
 import {message} from "antd";
+import dayjs from "dayjs";
 
 export async function initMetaMask({
                                        status,
@@ -114,6 +115,14 @@ export function startTransfer({
                     }
                 }).then((res) => {
                     setTransactionResult(res);
+                    return web3.eth.getBlock(res.blockNumber)
+                }).then((res) => {
+                    setTransactionResult((pre) => {
+                        return {
+                            ...pre,
+                            timeStamp: dayjs(+new Date() - res.timestamp).format('YYYY-MM-DD HH:mm:ss')
+                        }
+                    })
                     setTransactionIsPending(false);
                     message.success("交易成功");
                 }).catch((e) => {
